@@ -1,40 +1,16 @@
-TODO:
+# 🎮 Catcher in the Sky
+_(в процессе реализации)_
 
-1. Place catchers in the sky (random position for both). First catchers, than Glitch
-2. Stop the game if Glitch gets enough points.
-3. Glitch must jump to empty cell (check and if a player is in the cell - jump to another).
-4. Create classes:
-   - ✅ Position (informational expert/creator - GRASP),
-   - ✅ Glitch (informational expert/creator - GRASP),
-   - ✅ Settings (DI/infrastructure),
-   - ✅ SkySettings (DI),
-   - ✅ JumpSetting
-   - ✅ Catcher (Glitch alike)
-   - ✅ Unit => Catcher extends Unit, Glitch extends Unit
+---
 
-// new Game (new Settings(new SkySettings()))
-// entity objects vs value objects (DDD)
-// classes -> to separate files
+> *Разработка начата с идеи: пусть даже баг улетит в облака — мы его поймаем *
+## 📌 Описание
 
-/game-project
-├── /src
-│ ├── /frontend
-│ │ ├── /components # UI-компоненты / классы
-│ │ ├── /assets # изображения, звуки
-│ │ ├── /styles # CSS / SCSS
-│ │ └── index.js # точка входа
-│ ├── /backend
-│ │ ├── /controllers # логика API / игры
-│ │ ├── /models # классы игровых сущностей (например, Enemy, Player)
-│ │ ├── /routes # API-роуты
-│ │ └── server.js # запуск сервера (Express, например)
-│ └── /shared # общие утилиты, константы
-│ └── utils.js
-├── /tests
-│ ├── /unit # юнит-тесты классов и функций
-│ ├── /integration # связка фронта и бэка
-│ └── jest.config.js
-├── /public # html-шаблоны, favicon и пр.
-│ └── index.html
-├── package.json
-└── README.md
+**Catcher in the Sky** — это аркадная мини-игра, разработанная на JavaScript. На небесном игровом поле игроки (`Catchers` ✋🤚🏾) соревнуются в скорости реакции и точности, чтобы догнать непредсказуемый объект (`Glitch` 🎇 ).
+
+Игра реализуется с акцентом на:
+- 💡 модульную архитектуру
+- ⚡ динамическое управление состоянием игроков
+- 🧩 использование подхода TDD
+
+
