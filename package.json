@@ -1,0 +1,27 @@
+{
+  "name": "6-game-the-catcher-in-the-sky",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/preset-env": "^7.28.0",
+    "babel-jest": "^30.0.4",
+    "jest": "^30.0.4"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.[tj]sx?$": "babel-jest"
+    }
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "prettier": "^3.6.2"
+  }
+}
