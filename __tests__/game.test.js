@@ -29,8 +29,6 @@ describe('game', () => {
 
     game.start();
 
-    console.log(game.settings);
-
     expect(game.catcherOne.position.x).toBeGreaterThanOrEqual(0);
     expect(game.catcherOne.position.x).toBeLessThan(3);
 
@@ -60,8 +58,40 @@ describe('game', () => {
     expect(x1 !== x2 || y1 !== y2).toBe(true);
   });
 
+  it('Glitch should be placed and have valid position' , () => {
+    game.settings = {
+      skySize: {
+        columnsCount: 3,
+        rowsCount: 2
+      }
+    };
 
+    game.start();
 
+    expect(game.glitch).toBeDefined();
+    expect(game.glitchPosition.x).toBeGreaterThanOrEqual(0);
+    expect(game.glitchPosition.x).toBeLessThan(3);
+    expect(game.glitchPosition.y).toBeGreaterThanOrEqual(0);
+    expect(game.glitchPosition.y).toBeLessThan(2);
+  });
+
+  it('Glitch should have distinct position' , () => {
+    game.settings = {
+      skySize: {
+        columnsCount: 3,
+        rowsCount: 2
+      }
+    };
+
+    game.start();
+
+    const { x: x1, y: y1 } = game.catcherOne.position;
+    const { x: x2, y: y2 } = game.catcherTwo.position;
+    const { x: x3, y: y3 } = game.glitchPosition;
+
+    expect(x1 !== x3 || y1 !== y3).toBe(true);
+    expect(x2 !== x3 || y2 !== y3).toBe(true);
+  });
 
   it('settings should be set', () => {
     // default settings

@@ -6,61 +6,53 @@ import { Glitch } from './glitch.js';
 
 export class Game {
   #status = GAME_STATUSES.PENDING;
-  #glitch = new Glitch(null);
-  #glitchPosition = null;
+  #glitch;
   #catcherOne;
   #catcherTwo;
   #settings;
   #numberUtility;
 
 
-  #getRandomPosition() {
+  #getRandomPosition(coordinates) {
     let newX;
     let newY;
 
     do {
-      newX = this.#numberUtility.getRandomIntegerNumber(0, this.#settings.skySize.columnsCount);
-      newY = this.#numberUtility.getRandomIntegerNumber(0, this.#settings.skySize.rowsCount);
-    } while (newX === this.#catcherOne.position.x && newY === this.#catcherOne.position.y);
+      newX = this.#numberUtility.getRandomIntegerNumber(0 , this.#settings.skySize.columnsCount);
+      newY = this.#numberUtility.getRandomIntegerNumber(0 , this.#settings.skySize.rowsCount);
+    } while (coordinates.some((el) => el.x === newX && el.y === newY));
 
-    return new Position(newX, newY);
+    return new Position(newX , newY);
   }
 
   #glitchJump() {
-    const newPosition = new Position(
-      this.#numberUtility.getRandomIntegerNumber(0 , this.#settings.skySize.columnsCount) ,
-      this.#numberUtility.getRandomIntegerNumber(0 , this.#settings.skySize.rowsCount)
-    );
-
-    if (newPosition.x === this.#glitchPosition?.x && newPosition.y === this.#glitchPosition?.y) {
-      return this.#glitchJump();
-    }
-
-    this.#glitchPosition = newPosition;
+    this.glitchPosition = this.#getRandomPosition([this.catcherOne.position, this.catcherTwo.position, this.glitch.position]);
   }
 
-  //TODO a separate method:
-  #createCatchers() {
-    const catcherOnePosition = new Position(this.#numberUtility.getRandomIntegerNumber(0 , this.settings.skySize.columnsCount) ,
-                                            this.#numberUtility.getRandomIntegerNumber(0 , this.settings.skySize.rowsCount)
-    )
-    this.#catcherOne = new Catcher(
-      1 ,
+  #createUnits() {
+    const catcherOneStartPosition = this.#getRandomPosition([]);
+    this.#catcherOne = new Catcher(1 , catcherOneStartPosition);
 
-    );
-    this.#catcherTwo = new Catcher(2, this.#getRandomPosition());
+    const catcherTwoStartPosition = this.#getRandomPosition([catcherOneStartPosition]);
+    this.#catcherTwo = new Catcher(2 , catcherTwoStartPosition);
+
+    const glitchStartPosition = this.#getRandomPosition([catcherOneStartPosition, catcherTwoStartPosition]);
+
+    this.#glitch = new Glitch(glitchStartPosition);
   }
 
   // dependency injection
   constructor(numberUtility , gameSettings) {
     this.#numberUtility = numberUtility;
     this.#settings = new Settings(gameSettings);
-
   }
 
   // post
   start() {
-    this.#status = GAME_STATUSES.IN_PROGRESS;
+    if (this.#status === GAME_STATUSES.PENDING) {
+      this.#createUnits();
+      this.#status = GAME_STATUSES.IN_PROGRESS;
+    }
     this.#glitchJump();
 
     setInterval(() => {
@@ -70,10 +62,6 @@ export class Game {
 
   get status() {
     return this.#status;
-  }
-
-  get glitchPosition() {
-    return this.#glitchPosition;
   }
 
   get settings() {
@@ -104,5 +92,17 @@ export class Game {
 
   get catcherTwo() {
     return this.#catcherTwo;
+  }
+
+  get glitch() {
+    return this.#glitch;
+  }
+
+  get glitchPosition() {
+    return this.#glitch.position;
+  }
+
+  set glitchPosition(newPosition) {
+    this.#glitch.position = newPosition;
   }
 }
