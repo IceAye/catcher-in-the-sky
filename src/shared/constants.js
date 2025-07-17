@@ -4,3 +4,10 @@ export const GAME_STATUSES = {
   COMPLETED: 'completed',
   PAUSED: 'paused'
 };
+
+export const MOVE_DIRECTIONS = {
+  DOWN: 'DOWN',
+  UP: 'UP',
+  LEFT: 'LEFT',
+  RIGHT: 'RIGHT'
+}

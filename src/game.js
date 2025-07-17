@@ -1,5 +1,4 @@
-import { GAME_STATUSES } from './shared/constants.js';
-import { Position } from './position.js';
+import { GAME_STATUSES , MOVE_DIRECTIONS } from './shared/constants.js';
 import { Settings } from './shared/settings.js';
 import { Catcher } from './catcher.js';
 import { Glitch } from './glitch.js';
@@ -12,33 +11,32 @@ export class Game {
   #settings;
   #numberUtility;
 
-
-  #getRandomPosition(coordinates) {
-    let newX;
-    let newY;
-
-    do {
-      newX = this.#numberUtility.getRandomIntegerNumber(0 , this.#settings.skySize.columnsCount);
-      newY = this.#numberUtility.getRandomIntegerNumber(0 , this.#settings.skySize.rowsCount);
-    } while (coordinates.some((el) => el.x === newX && el.y === newY));
-
-    return new Position(newX , newY);
-  }
-
   #glitchJump() {
-    this.glitchPosition = this.#getRandomPosition([this.catcherOne.position, this.catcherTwo.position, this.glitch.position]);
+    this.#glitch.position = this.#numberUtility.getRandomPosition(
+      [this.#catcherOne.position , this.#catcherTwo.position , this.#glitch.position] , this.settings.skySize);
   }
 
   #createUnits() {
-    const catcherOneStartPosition = this.#getRandomPosition([]);
+    const catcherOneStartPosition = this.#numberUtility.getRandomPosition([] , this.settings.skySize);
     this.#catcherOne = new Catcher(1 , catcherOneStartPosition);
 
-    const catcherTwoStartPosition = this.#getRandomPosition([catcherOneStartPosition]);
+    const catcherTwoStartPosition = this.#numberUtility.getRandomPosition([catcherOneStartPosition] ,
+                                                                          this.settings.skySize);
     this.#catcherTwo = new Catcher(2 , catcherTwoStartPosition);
 
-    const glitchStartPosition = this.#getRandomPosition([catcherOneStartPosition, catcherTwoStartPosition]);
+    const glitchStartPosition = this.#numberUtility.getRandomPosition(
+      [catcherOneStartPosition , catcherTwoStartPosition] , this.settings.skySize);
 
     this.#glitch = new Glitch(glitchStartPosition);
+  }
+
+  #isInsideSky(newPosition) {
+    return 0 <= newPosition.x && newPosition.x < this.settings.skySize.columnsCount
+        && 0 <= newPosition.y && newPosition.y < this.settings.skySize.rowsCount;
+  }
+
+  #isCellBusyByOtherCatcher(newPosition) {
+    return newPosition.equals(this.#catcherOne.position) || newPosition.equals(this.#catcherTwo.position);
   }
 
   // dependency injection
@@ -58,6 +56,32 @@ export class Game {
     setInterval(() => {
       this.#glitchJump();
     } , this.#settings.glitchJumpInterval);
+  }
+
+  moveCatcher(playerNumber , direction) {
+    const newPosition = this.#catcherOne.position.clone();
+
+    switch (direction) {
+      case MOVE_DIRECTIONS.UP:
+        newPosition.y--;
+        break;
+      case MOVE_DIRECTIONS.DOWN:
+        newPosition.y++;
+        break;
+      case MOVE_DIRECTIONS.LEFT:
+        newPosition.x--;
+        break;
+      case MOVE_DIRECTIONS.RIGHT:
+        newPosition.x++;
+        break;
+      default:
+        throw new Error('Invalid direction');
+    }
+
+    if (!this.#isInsideSky(newPosition)) return;
+    if (this.#isCellBusyByOtherCatcher(newPosition)) return;
+
+    this.#catcherOne.position = newPosition;
   }
 
   get status() {
@@ -104,5 +128,17 @@ export class Game {
 
   set glitchPosition(newPosition) {
     this.#glitch.position = newPosition;
+  }
+
+  get catcherOnePosition() {
+    return this.#catcherOne.position;
+  }
+
+  set catcherOnePosition(newPosition) {
+    this.#catcherOne.position = newPosition;
+  }
+
+  get catcherTwoPosition() {
+    return this.#catcherTwo.position;
   }
 }
