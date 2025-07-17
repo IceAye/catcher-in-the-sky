@@ -1,8 +1,9 @@
 import { NumberUtility } from '../src/number-utility.js';
 import { Game } from '../src/game.js';
-import { GAME_STATUSES } from '../src/shared/constants.js';
+import { GAME_STATUSES , MOVE_DIRECTIONS } from '../src/shared/constants.js';
 import { Settings } from '../src/shared/settings.js';
 import { SkySize } from '../src/skySize.js';
+import { Position } from '../src/position.js';
 
 describe('game', () => {
   let game;
@@ -29,11 +30,11 @@ describe('game', () => {
 
     game.start();
 
-    expect(game.catcherOne.position.x).toBeGreaterThanOrEqual(0);
-    expect(game.catcherOne.position.x).toBeLessThan(3);
+    expect(game.catcherOnePosition.x).toBeGreaterThanOrEqual(0);
+    expect(game.catcherOnePosition.x).toBeLessThan(3);
 
-    expect(game.catcherOne.position.y).toBeGreaterThanOrEqual(0);
-    expect(game.catcherOne.position.y).toBeLessThan(2);
+    expect(game.catcherOnePosition.y).toBeGreaterThanOrEqual(0);
+    expect(game.catcherOnePosition.y).toBeLessThan(2);
   });
 
   it('CatcherTwo should be placed on the sky and have distinct positions with CatcherOne', () => {
@@ -47,13 +48,13 @@ describe('game', () => {
     game.start();
 
     expect(game.catcherTwo).toBeDefined();
-    expect(game.catcherTwo.position.x).toBeGreaterThanOrEqual(0);
-    expect(game.catcherTwo.position.x).toBeLessThan(3);
-    expect(game.catcherTwo.position.y).toBeGreaterThanOrEqual(0);
-    expect(game.catcherTwo.position.y).toBeLessThan(2);
+    expect(game.catcherTwoPosition.x).toBeGreaterThanOrEqual(0);
+    expect(game.catcherTwoPosition.x).toBeLessThan(3);
+    expect(game.catcherTwoPosition.y).toBeGreaterThanOrEqual(0);
+    expect(game.catcherTwoPosition.y).toBeLessThan(2);
 
-    const { x: x1, y: y1 } = game.catcherOne.position;
-    const { x: x2, y: y2 } = game.catcherTwo.position;
+    const { x: x1, y: y1 } = game.catcherOnePosition;
+    const { x: x2, y: y2 } = game.catcherTwoPosition;
 
     expect(x1 !== x2 || y1 !== y2).toBe(true);
   });
@@ -85,8 +86,8 @@ describe('game', () => {
 
     game.start();
 
-    const { x: x1, y: y1 } = game.catcherOne.position;
-    const { x: x2, y: y2 } = game.catcherTwo.position;
+    const { x: x1, y: y1 } = game.catcherOnePosition;
+    const { x: x2, y: y2 } = game.catcherTwoPosition;
     const { x: x3, y: y3 } = game.glitchPosition;
 
     expect(x1 !== x3 || y1 !== y3).toBe(true);
@@ -143,6 +144,69 @@ describe('game', () => {
       const position2 = game.glitchPosition;
       expect(position1).not.toEqual(position2);
     }
+  });
+
+  it('Catcher should move in available direction' , () => {
+
+    class MockNumberUtility extends NumberUtility {
+      #pointerIndex = 0;
+      #mockValues = [
+        new Position(2, 2),
+        new Position(0, 2),
+        new Position(1, 1)
+      ]
+
+      getRandomPosition(unitCoordinates , skySettings) {
+        return this.#mockValues[this.#pointerIndex++];
+      }
+    }
+
+    const testGame = new Game(new MockNumberUtility());
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3,
+        rowsCount: 3
+      },
+      glitchJumpInterval: 10000
+    };
+
+    testGame.start();
+
+    expect(testGame.catcherOnePosition).toEqual({ x: 2, y: 2 });
+
+    // todo: transfer limitation tests to a separate unit
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.DOWN);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2, y: 2 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2, y: 2 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2, y: 1 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1, y: 1 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1, y: 0 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1, y: 0 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 0, y: 0 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 0, y: 0 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.DOWN);
+    expect(testGame.catcherOnePosition).toEqual({ x: 0, y: 1 });
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1, y: 1 });
+
   });
 });
 
