@@ -1,3 +1,5 @@
+import { Position } from './position.js';
+
 export class NumberUtility {
   getRandomIntegerNumber(fromInclusive, toExclusive) {
     if (typeof fromInclusive !== 'number' || typeof toExclusive !== 'number') {
@@ -7,5 +9,17 @@ export class NumberUtility {
       throw new RangeError('fromInclusive must be less than toExclusive');
     }
     return Math.floor(Math.random() * (toExclusive - fromInclusive) + fromInclusive);
+  }
+
+  getRandomPosition(unitCoordinates, skySettings) {
+    let newX;
+    let newY;
+
+    do {
+      newX = this.getRandomIntegerNumber(0 , skySettings.columnsCount);
+      newY = this.getRandomIntegerNumber(0 , skySettings.rowsCount);
+    } while (unitCoordinates.some((el) => el.equals({ x: newX , y: newY })));
+
+    return new Position(newX, newY);
   }
 }
