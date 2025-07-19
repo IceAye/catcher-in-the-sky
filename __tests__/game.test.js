@@ -14,6 +14,10 @@ describe('game' , () => {
     game = new Game(randomNumber , new Settings(new SkySize()));
   });
 
+  afterEach(async () => {
+    await game.stop();
+  });
+
   it('should start' , () => {
     expect(game.status).toBe(GAME_STATUSES.PENDING);
 
