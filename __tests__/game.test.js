@@ -4,32 +4,33 @@ import { GAME_STATUSES , MOVE_DIRECTIONS } from '../src/shared/constants.js';
 import { Settings } from '../src/shared/settings.js';
 import { SkySize } from '../src/skySize.js';
 import { Position } from '../src/position.js';
+import { MockNumberUtility } from './utils/mock-number-utility.js';
 
-describe('game', () => {
+describe('game' , () => {
   let game;
 
   beforeEach(() => {
     const randomNumber = new NumberUtility();
-    game = new Game(randomNumber, new Settings(new SkySize()));
+    game = new Game(randomNumber , new Settings(new SkySize()));
   });
 
-  it('should start', () => {
+  it('should start' , () => {
     expect(game.status).toBe(GAME_STATUSES.PENDING);
 
     game.start();
     expect(game.status).toBe(GAME_STATUSES.IN_PROGRESS);
   });
 
-  it('CatcherOne should be placed on the sky after start', () => {
+  it('CatcherOne should be placed on the sky after start' , () => {
     game.settings = {
       skySize: {
-        columnsCount: 3,
+        columnsCount: 3 ,
         rowsCount: 2
       }
     };
 
     game.start();
-
+    expect(game.catcherOne).toBeDefined();
     expect(game.catcherOnePosition.x).toBeGreaterThanOrEqual(0);
     expect(game.catcherOnePosition.x).toBeLessThan(3);
 
@@ -37,10 +38,10 @@ describe('game', () => {
     expect(game.catcherOnePosition.y).toBeLessThan(2);
   });
 
-  it('CatcherTwo should be placed on the sky and have distinct positions with CatcherOne', () => {
+  it('CatcherTwo should be placed on the sky and have distinct positions with CatcherOne' , () => {
     game.settings = {
       skySize: {
-        columnsCount: 3,
+        columnsCount: 3 ,
         rowsCount: 2
       }
     };
@@ -53,8 +54,8 @@ describe('game', () => {
     expect(game.catcherTwoPosition.y).toBeGreaterThanOrEqual(0);
     expect(game.catcherTwoPosition.y).toBeLessThan(2);
 
-    const { x: x1, y: y1 } = game.catcherOnePosition;
-    const { x: x2, y: y2 } = game.catcherTwoPosition;
+    const { x: x1 , y: y1 } = game.catcherOnePosition;
+    const { x: x2 , y: y2 } = game.catcherTwoPosition;
 
     expect(x1 !== x2 || y1 !== y2).toBe(true);
   });
@@ -62,7 +63,7 @@ describe('game', () => {
   it('Glitch should be placed and have valid position' , () => {
     game.settings = {
       skySize: {
-        columnsCount: 3,
+        columnsCount: 3 ,
         rowsCount: 2
       }
     };
@@ -79,61 +80,61 @@ describe('game', () => {
   it('Glitch should have distinct position' , () => {
     game.settings = {
       skySize: {
-        columnsCount: 3,
+        columnsCount: 3 ,
         rowsCount: 2
       }
     };
 
     game.start();
 
-    const { x: x1, y: y1 } = game.catcherOnePosition;
-    const { x: x2, y: y2 } = game.catcherTwoPosition;
-    const { x: x3, y: y3 } = game.glitchPosition;
+    const { x: x1 , y: y1 } = game.catcherOnePosition;
+    const { x: x2 , y: y2 } = game.catcherTwoPosition;
+    const { x: x3 , y: y3 } = game.glitchPosition;
 
     expect(x1 !== x3 || y1 !== y3).toBe(true);
     expect(x2 !== x3 || y2 !== y3).toBe(true);
   });
 
-  it('settings should be set', () => {
+  it('settings should be set' , () => {
     // default settings
     expect(game.settings).toEqual({
-      skySize: {
-        columnsCount: 4,
-        rowsCount: 4
-      },
-      glitchJumpInterval: 1000
-    });
+                                    skySize: {
+                                      columnsCount: 4 ,
+                                      rowsCount: 4
+                                    } ,
+                                    glitchJumpInterval: 1000
+                                  });
 
     // didn't change because of deep copy
     game.settings.skySize.columnsCount = -1000;
 
     game.settings = {
       skySize: {
-        columnsCount: 3,
+        columnsCount: 3 ,
         rowsCount: 3
       }
     };
-    expect(game.settings.skySize).toEqual({ columnsCount: 3, rowsCount: 3 });
+    expect(game.settings.skySize).toEqual({ columnsCount: 3 , rowsCount: 3 });
   });
 
-  it('settings should be set partially', () => {
+  it('settings should be set partially' , () => {
     game.settings = {
       glitchJumpInterval: 1
     };
 
     expect(game.settings.skySize).toEqual({
-      columnsCount: 4,
-      rowsCount: 4
-    });
+                                            columnsCount: 4 ,
+                                            rowsCount: 4
+                                          });
     expect(game.settings.glitchJumpInterval).toEqual(1);
   });
 
-  it('Glitch should change its position in specified interval', async () => {
+  it('Glitch should change its position in specified interval' , async () => {
     game.settings = {
       skySize: {
-        columnsCount: 3,
+        columnsCount: 3 ,
         rowsCount: 2
-      },
+      } ,
       glitchJumpInterval: 1
     };
     game.start();
@@ -146,68 +147,100 @@ describe('game', () => {
     }
   });
 
-  it('Catcher should move in available direction' , () => {
+  it('CatcherOne should move in available direction' , () => {
 
-    class MockNumberUtility extends NumberUtility {
-      #pointerIndex = 0;
-      #mockValues = [
-        new Position(2, 2),
-        new Position(0, 2),
-        new Position(1, 1)
-      ]
-
-      getRandomPosition(unitCoordinates , skySettings) {
-        return this.#mockValues[this.#pointerIndex++];
-      }
-    }
-
-    const testGame = new Game(new MockNumberUtility());
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(2 , 2) ,
+                                                      new Position(0 , 2) ,
+                                                      new Position(1 , 1)
+                                                    ]));
 
     testGame.settings = {
       skySize: {
-        columnsCount: 3,
+        columnsCount: 3 ,
         rowsCount: 3
-      },
+      } ,
       glitchJumpInterval: 10000
     };
 
     testGame.start();
 
-    expect(testGame.catcherOnePosition).toEqual({ x: 2, y: 2 });
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 2 });
 
-    // todo: transfer limitation tests to a separate unit
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 2 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.DOWN);
-    expect(testGame.catcherOnePosition).toEqual({ x: 2, y: 2 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 2 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.RIGHT);
-    expect(testGame.catcherOnePosition).toEqual({ x: 2, y: 2 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 1 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
-    expect(testGame.catcherOnePosition).toEqual({ x: 2, y: 1 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1 , y: 1 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.LEFT);
-    expect(testGame.catcherOnePosition).toEqual({ x: 1, y: 1 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1 , y: 0 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
-    expect(testGame.catcherOnePosition).toEqual({ x: 1, y: 0 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1 , y: 0 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
-    expect(testGame.catcherOnePosition).toEqual({ x: 1, y: 0 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 0 , y: 0 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.LEFT);
-    expect(testGame.catcherOnePosition).toEqual({ x: 0, y: 0 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 0 , y: 0 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.LEFT);
-    expect(testGame.catcherOnePosition).toEqual({ x: 0, y: 0 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.catcherOnePosition).toEqual({ x: 0 , y: 1 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.DOWN);
-    expect(testGame.catcherOnePosition).toEqual({ x: 0, y: 1 });
-
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.RIGHT);
-    expect(testGame.catcherOnePosition).toEqual({ x: 1, y: 1 });
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1 , y: 1 });
 
   });
+
+  it('CatcherTwo should move in available direction and avoid collision with CatcherOne' , () => {
+
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(2 , 2) , // CatcherOne
+                                                      new Position(0 , 2) , // CatcherTwo
+                                                      new Position(1 , 1)  // Glitch
+                                                    ]));
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3 ,
+        rowsCount: 3
+      } ,
+      glitchJumpInterval: 10000
+    };
+
+    testGame.start();
+
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 2 });
+    expect(testGame.catcherTwoPosition).toEqual({ x: 0 , y: 2 });
+
+    testGame.moveCatcher(2 , MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherTwoPosition).toEqual({ x: 0 , y: 1 });
+
+    testGame.moveCatcher(2 , MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.catcherTwoPosition).toEqual({ x: 1 , y: 1 });
+
+    testGame.moveCatcher(2 , MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherTwoPosition).toEqual({ x: 1 , y: 0 });
+
+    testGame.moveCatcher(2 , MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.catcherTwoPosition).toEqual({ x: 2 , y: 0 });
+
+    testGame.moveCatcher(2 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.catcherTwoPosition).toEqual({ x: 2 , y: 1 });
+
+    testGame.moveCatcher(2 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.catcherTwoPosition).toEqual({ x: 2 , y: 1 });
+
+  });
+
 });
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve , ms));
