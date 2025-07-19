@@ -1,4 +1,5 @@
-import { NumberUtility } from 'src/number-utility.js';
+import { NumberUtility } from '../src/number-utility.js';
+
 
 describe('Number Utility', () => {
   let randomNumber;
