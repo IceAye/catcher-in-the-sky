@@ -6,6 +6,7 @@ import { Glitch } from './glitch.js';
 export class Game {
   #status = GAME_STATUSES.PENDING;
   #glitch;
+  #glitchSetIntervalId;
   #catchers = new Map();
   #catcherOne;
   #catcherTwo;
@@ -17,7 +18,11 @@ export class Game {
       [this.#catcherOne.position , this.#catcherTwo.position , this.#glitch.position] , this.settings.skySize);
   }
 
-
+  #runGlitchJumpInterval() {
+    this.#glitchSetIntervalId = setInterval(() => {
+      this.#glitchJump();
+    } , this.#settings.glitchJumpInterval);
+  }
 
   #createUnits() {
     const catcherOneStartPosition = this.#numberUtility.getRandomPosition([] , this.settings.skySize);
@@ -65,11 +70,13 @@ export class Game {
       this.#status = GAME_STATUSES.IN_PROGRESS;
     }
 
-    this.#glitchJump();
+    this.#runGlitchJumpInterval();
 
-    setInterval(() => {
-      this.#glitchJump();
-    } , this.#settings.glitchJumpInterval);
+  }
+
+  async stop() {
+    clearInterval(this.#glitchSetIntervalId);
+    this.#status = GAME_STATUSES.COMPLETED;
   }
 
   moveCatcher(catcherId , direction) {
