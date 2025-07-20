@@ -244,7 +244,7 @@ describe('game' , () => {
 
   });
 
-  it('should check Glitch catching by a Catcher' , () => {
+  it('should check Glitch being caught by a Catcher' , () => {
     const testGame = new Game(new MockNumberUtility([
                                                       new Position(2 , 2) , // CatcherOne
                                                       new Position(0 , 2) , // CatcherTwo
@@ -260,14 +260,108 @@ describe('game' , () => {
     };
 
     testGame.start();
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
-    expect(testGame.catcherOnePosition).toEqual({x: 2, y: 1});
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 1 });
 
-    testGame.moveCatcher(1, MOVE_DIRECTIONS.LEFT);
-    expect(testGame.catcherOnePosition).toEqual({x: 1, y: 1});
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1 , y: 1 });
 
     expect(testGame.glitchPosition.equals(testGame.catcherOnePosition)).toBe(true);
   });
+
+  it('should update the Catcher\'s score after catching Glitch' , () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(2 , 2) , // CatcherOne
+                                                      new Position(0 , 2) , // CatcherTwo
+                                                      new Position(1 , 1)  // Glitch
+                                                    ]));
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3 ,
+        rowsCount: 3
+      } ,
+      glitchJumpInterval: 1000000
+    };
+
+    testGame.start();
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 1 });
+
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 1 , y: 1 });
+
+    expect(testGame.getCatcherScore(testGame.catcherOne.id)).toEqual(15);
+  });
+
+  it('should award bonus after 3 consecutive Glitch catches' , async () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(1 , 1) , // CatcherOne
+                                                      new Position(0 , 2) , // CatcherTwo
+                                                      new Position(1 , 2) , // Glitch jump #1
+                                                      new Position(1 , 1) , // Glitch jump #2
+                                                      new Position(1 , 2)  // Glitch jump #3
+                                                    ]));
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3 ,
+        rowsCount: 3
+      } ,
+      glitchJumpInterval: 1
+    };
+
+    testGame.start();
+
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.getCatcherScore(1)).toEqual(15);
+    expect(testGame.getGlitchStrike(1)).toEqual(1);
+
+    await delay(testGame.settings.glitchJumpInterval);
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.getCatcherScore(1)).toEqual(30);
+    expect(testGame.getGlitchStrike(1)).toEqual(2);
+
+    await delay(testGame.settings.glitchJumpInterval);
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.getCatcherScore(1)).toEqual(65);
+    expect(testGame.getGlitchStrike(1)).toEqual(0);
+  });
+
+  it('should reset Glitch strike when Catcher fails to catch' , async () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(1 , 1) , // CatcherOne
+                                                      new Position(2 , 2) , // CatcherTwo (в стороне)
+                                                      new Position(1 , 2) , // Glitch jump #1
+                                                      new Position(1 , 1) , // Glitch jump #2
+                                                      new Position(0 , 0)  // Glitch jump #3 → вне досягаемости
+                                                    ]));
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3 ,
+        rowsCount: 3
+      } ,
+      glitchJumpInterval: 1
+    };
+
+    testGame.start();
+
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.getCatcherScore(1)).toEqual(15);
+    expect(testGame.getGlitchStrike(1)).toEqual(1);
+
+    await delay(testGame.settings.glitchJumpInterval);
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.getCatcherScore(1)).toEqual(30);
+    expect(testGame.getGlitchStrike(1)).toEqual(2);
+
+    await delay(testGame.settings.glitchJumpInterval);
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.getCatcherScore(1)).toEqual(30);
+    expect(testGame.getGlitchStrike(1)).toEqual(0);
+  });
+
 
 });
 
