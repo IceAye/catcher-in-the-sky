@@ -11,7 +11,9 @@ export class Game {
   #catcherOne;
   #catcherTwo;
   #settings;
+  #score = new Map();
   #numberUtility;
+
 
   #glitchJump() {
     this.#glitch.position = this.#numberUtility.getRandomPosition(
@@ -55,6 +57,12 @@ export class Game {
       }
     }
     return false;
+  }
+
+  #isGlitchBeingCaught(catcherId) {
+    const catcher = this.#catchers.get(catcherId);
+
+    return this.#glitch.position.equals(catcher.position);
   }
 
   // dependency injection
@@ -104,9 +112,13 @@ export class Game {
 
     if (!this.#isInsideSky(newPosition)) return;
     if (this.#isCellBusyByOtherCatcher(newPosition, catcherId)) return;
+    this.#isGlitchBeingCaught(catcherId)
 
     catcher.position = newPosition;
   }
+
+
+
 
   get status() {
     return this.#status;
@@ -165,4 +177,9 @@ export class Game {
   get catcherTwoPosition() {
     return this.#catcherTwo.position;
   }
+
+  getScore(catcherId) {
+    return this.#score.get(catcherId) ?? 0;
+  }
+
 }

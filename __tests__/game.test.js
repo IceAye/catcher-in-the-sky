@@ -244,6 +244,31 @@ describe('game' , () => {
 
   });
 
+  it('should check Glitch catching by a Catcher' , () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(2 , 2) , // CatcherOne
+                                                      new Position(0 , 2) , // CatcherTwo
+                                                      new Position(1 , 1)  // Glitch
+                                                    ]));
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3 ,
+        rowsCount: 3
+      } ,
+      glitchJumpInterval: 1000000
+    };
+
+    testGame.start();
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({x: 2, y: 1});
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({x: 1, y: 1});
+
+    expect(testGame.glitchPosition.equals(testGame.catcherOnePosition)).toBe(true);
+  });
+
 });
 
 
