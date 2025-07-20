@@ -36,8 +36,8 @@ export class Game {
     const two = new Catcher(2 , catcherTwoStartPosition);
     this.#catcherTwo = two;
 
-    this.#catchers.set(1, one);
-    this.#catchers.set(2, two);
+    this.#catchers.set(1 , one);
+    this.#catchers.set(2 , two);
 
     const glitchStartPosition = this.#numberUtility.getRandomPosition(
       [catcherOneStartPosition , catcherTwoStartPosition] , this.settings.skySize);
@@ -50,8 +50,8 @@ export class Game {
       && 0 <= newPosition.y && newPosition.y < this.settings.skySize.rowsCount;
   }
 
-  #isCellBusyByOtherCatcher(newPosition, catcherId) {
-    for (const [id, catcher] of this.#catchers.entries()) {
+  #isCellBusyByOtherCatcher(newPosition , catcherId) {
+    for (const [id , catcher] of this.#catchers.entries()) {
       if (catcherId !== id && catcher.position.equals(newPosition)) {
         return true;
       }
@@ -64,6 +64,34 @@ export class Game {
 
     return this.#glitch.position.equals(catcher.position);
   }
+
+  #updateScore(catcherId , delta) {
+    const currentScore = this.#score.get(catcherId) ?? { points: 0 , glitchStrike: 0 };
+    const updatedScore = {
+      ...currentScore ,
+      points: currentScore.points + delta
+    };
+    this.#score.set(catcherId , updatedScore);
+  }
+
+  #updateGlitchStrike(catcherId , wasGlitchCaught) {
+    const currentScore = this.#score.get(catcherId) ?? { points: 0 , glitchStrike: 0 };
+
+    const updatedScore = {
+      points: currentScore.points ,
+      glitchStrike: wasGlitchCaught
+                    ? currentScore.glitchStrike + 1
+                    : 0
+    };
+
+    if (updatedScore.glitchStrike === 3) {
+      updatedScore.points += 20;
+      updatedScore.glitchStrike = 0;
+    }
+
+    this.#score.set(catcherId , updatedScore);
+  }
+
 
   // dependency injection
   constructor(numberUtility , gameSettings) {
@@ -111,14 +139,18 @@ export class Game {
     }
 
     if (!this.#isInsideSky(newPosition)) return;
-    if (this.#isCellBusyByOtherCatcher(newPosition, catcherId)) return;
-    this.#isGlitchBeingCaught(catcherId)
+    if (this.#isCellBusyByOtherCatcher(newPosition , catcherId)) return;
 
     catcher.position = newPosition;
+
+    const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId);
+
+    if (wasGlitchCaught) {
+      this.#updateScore(catcherId , 15);
+    }
+
+    this.#updateGlitchStrike(catcherId , wasGlitchCaught);
   }
-
-
-
 
   get status() {
     return this.#status;
@@ -178,8 +210,12 @@ export class Game {
     return this.#catcherTwo.position;
   }
 
-  getScore(catcherId) {
-    return this.#score.get(catcherId) ?? 0;
+  getCatcherScore(catcherId) {
+    return this.#score.get(catcherId).points ?? 0;
+  }
+
+  getGlitchStrike(catcherId) {
+    return this.#score.get(catcherId)?.glitchStrike ?? 0;
   }
 
 }
