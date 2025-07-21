@@ -1,8 +1,9 @@
 import { SkySize } from '../skySize.js';
+import { GlitchSpeedJump } from '../glitch-speed-jump.js';
 
 export class Settings {
-  constructor(skySize = {}) {
+  constructor({ skySize = {} , level } = {}) {
     this.skySize = new SkySize(skySize);
-    this.glitchJumpInterval = 1000;
+    this.glitchSpeedJump = new GlitchSpeedJump(level);
   }
 }
