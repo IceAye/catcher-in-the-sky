@@ -2,6 +2,7 @@ import { GAME_STATUSES , MOVE_DIRECTIONS } from './shared/constants.js';
 import { Settings } from './shared/settings.js';
 import { Catcher } from './catcher.js';
 import { Glitch } from './glitch.js';
+import { GlitchSpeedJump } from './glitch-speed-jump.js';
 
 export class Game {
   #status = GAME_STATUSES.PENDING;
@@ -23,7 +24,7 @@ export class Game {
   #runGlitchJumpInterval() {
     this.#glitchSetIntervalId = setInterval(() => {
       this.#glitchJump();
-    } , this.#settings.glitchJumpInterval);
+    } , this.#settings.glitchSpeedJump.interval);
   }
 
   #createUnits() {
@@ -143,6 +144,7 @@ export class Game {
 
     catcher.position = newPosition;
 
+    //todo: ask whether is needed
     const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId);
 
     if (wasGlitchCaught) {
@@ -161,20 +163,31 @@ export class Game {
       ...this.#settings ,
       skySize: {
         ...this.#settings.skySize
+      } ,
+      glitchSpeedJump: {
+        ...this.#settings.glitchSpeedJump
       }
     };
   }
 
   set settings(settings) {
-    if (settings.skySize && settings.skySize.rowsCount * settings.skySize.columnsCount < 4) {
+    if (settings.skySize &&
+      settings.skySize.rowsCount * settings.skySize.columnsCount < 4) {
       throw new RangeError('The size of the sky should be bigger');
     }
+
+    const skySize = settings.skySize
+                    ? { ...settings.skySize }
+                    : this.#settings.skySize;
+
+    const glitchSpeedJump = settings.glitchSpeedJump
+                            ? new GlitchSpeedJump(settings.glitchSpeedJump.level)
+                            : this.#settings.glitchSpeedJump;
+
     this.#settings = {
       ...this.#settings ,
-      skySize: settings.skySize ? { ...settings.skySize } : this.#settings.skySize ,
-      glitchJumpInterval: settings.glitchJumpInterval
-                          ? settings.glitchJumpInterval
-                          : this.#settings.glitchJumpInterval
+      skySize ,
+      glitchSpeedJump
     };
   }
 
