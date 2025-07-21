@@ -11,7 +11,7 @@ describe('game' , () => {
 
   beforeEach(() => {
     const randomNumber = new NumberUtility();
-    game = new Game(randomNumber , new Settings(new SkySize()));
+    game = new Game(randomNumber , new Settings({ skySize: new SkySize() }));
   });
 
   afterEach(async () => {
@@ -20,8 +20,8 @@ describe('game' , () => {
 
   it('should start' , () => {
     expect(game.status).toBe(GAME_STATUSES.PENDING);
-
     game.start();
+
     expect(game.status).toBe(GAME_STATUSES.IN_PROGRESS);
   });
 
@@ -99,14 +99,17 @@ describe('game' , () => {
     expect(x2 !== x3 || y2 !== y3).toBe(true);
   });
 
-  it('settings should be set' , () => {
+  it('Sky size settings should be set' , () => {
     // default settings
     expect(game.settings).toEqual({
                                     skySize: {
                                       columnsCount: 4 ,
                                       rowsCount: 4
                                     } ,
-                                    glitchJumpInterval: 1000
+                                    glitchSpeedJump: {
+                                      level: 'junior' ,
+                                      interval: 1200
+                                    }
                                   });
 
     // didn't change because of deep copy
@@ -121,16 +124,21 @@ describe('game' , () => {
     expect(game.settings.skySize).toEqual({ columnsCount: 3 , rowsCount: 3 });
   });
 
+
   it('settings should be set partially' , () => {
     game.settings = {
-      glitchJumpInterval: 1
+      glitchSpeedJump: {
+        level: 'amateur' ,
+        interval: 800
+      }
     };
 
     expect(game.settings.skySize).toEqual({
                                             columnsCount: 4 ,
                                             rowsCount: 4
                                           });
-    expect(game.settings.glitchJumpInterval).toEqual(1);
+    expect(game.settings.glitchSpeedJump.level).toBe('amateur');
+    expect(game.settings.glitchSpeedJump.interval).toBe(800);
   });
 
   it('Glitch should change its position in specified interval' , async () => {
@@ -139,13 +147,17 @@ describe('game' , () => {
         columnsCount: 3 ,
         rowsCount: 2
       } ,
-      glitchJumpInterval: 1
+      glitchSpeedJump: {
+        level: 'pro' ,
+        interval: 400
+      }
+
     };
     game.start();
 
-    for (let i = 0; i <= 10; i++) {
+    for (let i = 0; i <= 4; i++) {
       const position1 = game.glitchPosition;
-      await delay(1);
+      await delay(game.settings.glitchSpeedJump.interval);
       const position2 = game.glitchPosition;
       expect(position1).not.toEqual(position2);
     }
@@ -164,7 +176,10 @@ describe('game' , () => {
         columnsCount: 3 ,
         rowsCount: 3
       } ,
-      glitchJumpInterval: 10000
+      glitchSpeedJump: {
+        level: 'amateur' ,
+        interval: 10000
+      }
     };
 
     testGame.start();
@@ -308,7 +323,10 @@ describe('game' , () => {
         columnsCount: 3 ,
         rowsCount: 3
       } ,
-      glitchJumpInterval: 1
+      glitchSpeedJump: {
+        level: 'amateur' ,
+        interval: 1
+      }
     };
 
     testGame.start();
@@ -317,12 +335,12 @@ describe('game' , () => {
     expect(testGame.getCatcherScore(1)).toEqual(15);
     expect(testGame.getGlitchStrike(1)).toEqual(1);
 
-    await delay(testGame.settings.glitchJumpInterval);
+    await delay(testGame.settings.glitchSpeedJump.interval);
     testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
     expect(testGame.getCatcherScore(1)).toEqual(30);
     expect(testGame.getGlitchStrike(1)).toEqual(2);
 
-    await delay(testGame.settings.glitchJumpInterval);
+    await delay(testGame.settings.glitchSpeedJump.interval);
     testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
     expect(testGame.getCatcherScore(1)).toEqual(65);
     expect(testGame.getGlitchStrike(1)).toEqual(0);
@@ -342,7 +360,10 @@ describe('game' , () => {
         columnsCount: 3 ,
         rowsCount: 3
       } ,
-      glitchJumpInterval: 1
+      glitchSpeedJump: {
+        level: 'amateur' ,
+        interval: 1
+      }
     };
 
     testGame.start();
@@ -351,12 +372,12 @@ describe('game' , () => {
     expect(testGame.getCatcherScore(1)).toEqual(15);
     expect(testGame.getGlitchStrike(1)).toEqual(1);
 
-    await delay(testGame.settings.glitchJumpInterval);
+    await delay(testGame.settings.glitchSpeedJump.interval);
     testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
     expect(testGame.getCatcherScore(1)).toEqual(30);
     expect(testGame.getGlitchStrike(1)).toEqual(2);
 
-    await delay(testGame.settings.glitchJumpInterval);
+    await delay(testGame.settings.glitchSpeedJump.interval);
     testGame.moveCatcher(1 , MOVE_DIRECTIONS.RIGHT);
     expect(testGame.getCatcherScore(1)).toEqual(30);
     expect(testGame.getGlitchStrike(1)).toEqual(0);
@@ -367,3 +388,4 @@ describe('game' , () => {
 
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve , ms));
+
