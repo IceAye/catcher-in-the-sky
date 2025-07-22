@@ -109,7 +109,8 @@ describe('game' , () => {
                                     glitchSpeedJump: {
                                       level: 'junior' ,
                                       interval: 1200
-                                    }
+                                    } ,
+                                    gameTime: 120000
                                   });
 
     // didn't change because of deep copy
@@ -139,6 +140,13 @@ describe('game' , () => {
                                           });
     expect(game.settings.glitchSpeedJump.level).toBe('amateur');
     expect(game.settings.glitchSpeedJump.interval).toBe(800);
+    expect(game.settings.gameTime).toBe(120000);
+
+    game.settings = {
+      gameTime: 180000 // 3 min
+    }
+
+    expect(game.settings.gameTime).toBe(180000);
   });
 
   it('Glitch should change its position in specified interval' , async () => {
