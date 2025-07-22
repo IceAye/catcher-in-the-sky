@@ -166,7 +166,8 @@ export class Game {
       } ,
       glitchSpeedJump: {
         ...this.#settings.glitchSpeedJump
-      }
+      } ,
+      gameTime: this.#settings.gameTime
     };
   }
 
@@ -184,10 +185,13 @@ export class Game {
                             ? new GlitchSpeedJump(settings.glitchSpeedJump.level)
                             : this.#settings.glitchSpeedJump;
 
+    const gameTime = settings.gameTime ? settings.gameTime : this.#settings.gameTime;
+
     this.#settings = {
       ...this.#settings ,
       skySize ,
-      glitchSpeedJump
+      glitchSpeedJump,
+      gameTime
     };
   }
 
