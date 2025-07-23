@@ -110,7 +110,8 @@ describe('game' , () => {
                                       level: 'junior' ,
                                       interval: 1200
                                     } ,
-                                    gameTime: 120000
+                                    gameTime: 120000,
+                                    soundEnabled: true
                                   });
 
     // didn't change because of deep copy
@@ -149,6 +150,21 @@ describe('game' , () => {
     expect(game.settings.gameTime).toBe(180000);
   });
 
+  it('sound should be enabled and disabled by user' , () => {
+    game.start();
+    expect(game.settings).toHaveProperty('soundEnabled');
+    expect(game.settings.soundEnabled).toBeDefined();
+    expect(game.settings.soundEnabled).toBeTruthy();
+
+    game.toggleSound();
+    expect(game.settings.soundEnabled).toBeDefined();
+    expect(game.settings.soundEnabled).toBeFalsy();
+
+    game.toggleSound();
+    expect(game.settings.soundEnabled).toBeDefined();
+    expect(game.settings.soundEnabled).toBeTruthy();
+  });
+
   it('Glitch should change its position in specified interval' , async () => {
     game.settings = {
       skySize: {
@@ -158,8 +174,8 @@ describe('game' , () => {
       glitchSpeedJump: {
         level: 'pro' ,
         interval: 400
-      }
-
+      },
+      soundEnabled: true
     };
     game.start();
 

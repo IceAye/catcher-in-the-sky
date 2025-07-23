@@ -7,4 +7,9 @@ export class Settings {
     this.glitchSpeedJump = new GlitchSpeedJump(level);
     this.gameTime = gameTime;
   }
+  soundEnabled = true;
+
+  toggleSound() {
+    this.soundEnabled = !this.soundEnabled;
+  }
 }

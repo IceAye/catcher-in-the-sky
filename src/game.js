@@ -69,7 +69,8 @@ export class Game {
       glitchSpeedJump: {
         ...this.#settings.glitchSpeedJump
       } ,
-      gameTime: this.#settings.gameTime
+      gameTime: this.#settings.gameTime ,
+      soundEnabled: this.#settings.soundEnabled
     };
   }
 
@@ -92,7 +93,7 @@ export class Game {
     this.#settings = {
       ...this.#settings ,
       skySize ,
-      glitchSpeedJump,
+      glitchSpeedJump ,
       gameTime
     };
   }
@@ -159,6 +160,10 @@ export class Game {
 
   getGlitchStrike(catcherId) {
     return this.#score.get(catcherId)?.glitchStrike ?? 0;
+  }
+
+  toggleSound() {
+    this.#settings.toggleSound();
   }
 
   #glitchJump() {
