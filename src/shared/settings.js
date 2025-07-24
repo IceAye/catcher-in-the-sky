@@ -1,4 +1,4 @@
-import { SkySize } from '../skySize.js';
+import { SkySize } from '../sky-size.js';
 import { GlitchSpeedJump } from '../glitch-speed-jump.js';
 
 export class Settings {
