@@ -110,7 +110,7 @@ describe('game' , () => {
                                       level: 'junior' ,
                                       interval: 1200
                                     } ,
-                                    gameTime: 120000,
+                                    gameTime: 120000 ,
                                     soundEnabled: true
                                   });
 
@@ -145,7 +145,7 @@ describe('game' , () => {
 
     game.settings = {
       gameTime: 180000 // 3 min
-    }
+    };
 
     expect(game.settings.gameTime).toBe(180000);
   });
@@ -174,7 +174,7 @@ describe('game' , () => {
       glitchSpeedJump: {
         level: 'pro' ,
         interval: 400
-      },
+      } ,
       soundEnabled: true
     };
     game.start();
@@ -367,10 +367,10 @@ describe('game' , () => {
     await delay(testGame.settings.glitchSpeedJump.interval);
     testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
     expect(testGame.getCatcherScore(1)).toEqual(65);
-    expect(testGame.getGlitchStrike(1)).toEqual(0);
+    expect(testGame.getGlitchStrike(1)).toEqual(1);
   });
 
-  it('should reset Glitch strike when Catcher fails to catch' , async () => {
+  it('should decrease Glitch strike when Catcher fails to catch' , async () => {
     const testGame = new Game(new MockNumberUtility([
                                                       new Position(1 , 1) , // CatcherOne
                                                       new Position(2 , 2) , // CatcherTwo (в стороне)
@@ -404,7 +404,7 @@ describe('game' , () => {
     await delay(testGame.settings.glitchSpeedJump.interval);
     testGame.moveCatcher(1 , MOVE_DIRECTIONS.RIGHT);
     expect(testGame.getCatcherScore(1)).toEqual(30);
-    expect(testGame.getGlitchStrike(1)).toEqual(0);
+    expect(testGame.getGlitchStrike(1)).toEqual(1);
   });
 
   it('Catcher should receive penalty when attempting to move outside the sky' , () => {
@@ -459,6 +459,56 @@ describe('game' , () => {
     testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
     expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 1 });
     expect(testGame.getCatcherScore(testGame.catcherOne.id)).toEqual(-8);
+  });
+
+  it('Catcher should receive penalty for failing to catch Glitch 5 times in a row' , async () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(1 , 1) , // CatcherOne
+                                                      new Position(2 , 2) , // CatcherTwo
+                                                      new Position(1 , 2) , // Glitch jump #1
+                                                      new Position(1 , 1) , // Glitch jump #2
+                                                      new Position(2 , 0) , // Glitch jump #3
+                                                      new Position(2 , 1) , // Glitch jump #4
+                                                      new Position(0 , 2)  // Glitch jump #5
+                                                    ]));
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3 ,
+        rowsCount: 3
+      } ,
+      glitchSpeedJump: {
+        level: 'amateur' ,
+        interval: 1
+      }
+    };
+
+    testGame.start();
+
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.getCatcherScore(1)).toEqual(0);
+    expect(testGame.getGlitchStrike(1)).toEqual(-1);
+
+    await delay(testGame.settings.glitchSpeedJump.interval);
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.LEFT);
+    expect(testGame.getCatcherScore(1)).toEqual(0);
+    expect(testGame.getGlitchStrike(1)).toEqual(-2);
+
+    await delay(testGame.settings.glitchSpeedJump.interval);
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.getCatcherScore(1)).toEqual(0);
+    expect(testGame.getGlitchStrike(1)).toEqual(-3);
+
+    await delay(testGame.settings.glitchSpeedJump.interval);
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.getCatcherScore(1)).toEqual(0);
+    expect(testGame.getGlitchStrike(1)).toEqual(-4);
+
+    await delay(testGame.settings.glitchSpeedJump.interval);
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.getCatcherScore(1)).toEqual(-3);
+    expect(testGame.getGlitchStrike(1)).toEqual(0);
+
   });
 
 });

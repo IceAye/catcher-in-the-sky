@@ -238,15 +238,25 @@ export class Game {
       points: currentScore.points ,
       glitchStrike: wasGlitchCaught
                     ? currentScore.glitchStrike + 1
-                    : 0
+                    : currentScore.glitchStrike - 1
     };
 
-    if (updatedScore.glitchStrike === 3) {
-      updatedScore.points += 20;
-      updatedScore.glitchStrike = 0;
-    }
+   this.#applyGlitchStrikeEffects(updatedScore)
 
     this.#score.set(catcherId , updatedScore);
   }
+
+  #applyGlitchStrikeEffects(score) {
+    if (score.glitchStrike === 3) {
+      score.points += 20;
+      score.glitchStrike = 1;
+    }
+
+    if (score.glitchStrike === -5) {
+      score.points -= 3;
+      score.glitchStrike = 0;
+    }
+  }
+
 
 }
