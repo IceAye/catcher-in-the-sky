@@ -155,6 +155,9 @@ export class Game {
 
     if (wasGlitchCaught) {
       this.#updateScore(catcherId , 15);
+      if (this.getCatcherScore(catcherId) >= 150) {
+        this.winGame(catcherId);
+      }
     }
 
     this.#updateGlitchStrike(catcherId , wasGlitchCaught);
@@ -170,6 +173,10 @@ export class Game {
 
   toggleSound() {
     this.#settings.toggleSound();
+  }
+
+  winGame(catcherId) {
+    return catcherId
   }
 
   #glitchJump() {
@@ -256,6 +263,14 @@ export class Game {
       score.points -= 3;
       score.glitchStrike = 0;
     }
+  }
+
+
+  /**
+   * @internal Used only for testing purposes
+   */
+  __forceScore(catcherId, score, strike = 0) {
+    this.#score.set(catcherId, { points: score, glitchStrike: strike });
   }
 
 

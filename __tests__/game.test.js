@@ -2,7 +2,7 @@ import { NumberUtility } from '../src/number-utility.js';
 import { Game } from '../src/game.js';
 import { GAME_STATUSES , MOVE_DIRECTIONS } from '../src/shared/constants.js';
 import { Settings } from '../src/shared/settings.js';
-import { SkySize } from '../src/skySize.js';
+import { SkySize } from '../src/sky-size.js';
 import { Position } from '../src/position.js';
 import { MockNumberUtility } from './utils/mock-number-utility.js';
 
@@ -509,6 +509,28 @@ describe('game' , () => {
     expect(testGame.getCatcherScore(1)).toEqual(-3);
     expect(testGame.getGlitchStrike(1)).toEqual(0);
 
+  });
+
+  it('CatcherOne should win if score is reached' , () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(1 , 1) , // CatcherOne
+                                                      new Position(2 , 2) , // CatcherTwo
+                                                      new Position(0 , 0)  // Glitch
+                                                    ]));
+
+    testGame.settings = {
+      gameTime: 120000 ,
+      glitchJumpInterval: 1000000
+    };
+
+    testGame.start();
+
+    testGame.__forceScore(1 , 70);
+    expect(testGame.getCatcherScore(1)).toBe(70);
+
+    testGame.__forceScore(1 , 150);
+    expect(testGame.getCatcherScore(1)).toBe(150);
+    expect(testGame.winGame(1)).toEqual(testGame.catcherOne.id);
   });
 
 });
