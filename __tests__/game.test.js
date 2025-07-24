@@ -407,6 +407,59 @@ describe('game' , () => {
     expect(testGame.getGlitchStrike(1)).toEqual(0);
   });
 
+  it('Catcher should receive penalty when attempting to move outside the sky' , () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(2 , 2) , // CatcherOne
+                                                      new Position(0 , 2) , // CatcherTwo
+                                                      new Position(1 , 1)  // Glitch
+                                                    ]));
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3 ,
+        rowsCount: 3
+      } ,
+      glitchJumpInterval: 1000000
+    };
+
+    testGame.start();
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 2 });
+    expect(testGame.getCatcherScore(testGame.catcherOne.id)).toEqual(-5);
+
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.DOWN);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 2 });
+    expect(testGame.getCatcherScore(testGame.catcherOne.id)).toEqual(-10);
+
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.RIGHT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 2 });
+    expect(testGame.getCatcherScore(testGame.catcherOne.id)).toEqual(-15);
+  });
+
+  it('Catcher should receive penalty when attempting to move to occupied cell' , () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(2 , 2) , // CatcherOne
+                                                      new Position(1 , 2) , // CatcherTwo
+                                                      new Position(1 , 1)  // Glitch
+                                                    ]));
+
+    testGame.settings = {
+      skySize: {
+        columnsCount: 3 ,
+        rowsCount: 3
+      } ,
+      glitchJumpInterval: 1000000
+    };
+
+    testGame.start();
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.LEFT);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 2 });
+    expect(testGame.getCatcherScore(testGame.catcherOne.id)).toEqual(-8);
+
+    testGame.moveCatcher(1 , MOVE_DIRECTIONS.UP);
+    expect(testGame.catcherOnePosition).toEqual({ x: 2 , y: 1 });
+    expect(testGame.getCatcherScore(testGame.catcherOne.id)).toEqual(-8);
+  });
 
 });
 

@@ -139,12 +139,18 @@ export class Game {
         throw new Error('Invalid direction');
     }
 
-    if (!this.#isInsideSky(newPosition)) return;
-    if (this.#isCellBusyByOtherCatcher(newPosition , catcherId)) return;
+    if (!this.#isInsideSky(newPosition)){
+      this.#updateScore(catcherId, -5);
+      return;
+    }
+
+    if (this.#isCellBusyByOtherCatcher(newPosition , catcherId)) {
+      this.#updateScore(catcherId, -8);
+      return;
+    }
 
     catcher.position = newPosition;
 
-    //todo: ask whether is needed
     const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId);
 
     if (wasGlitchCaught) {
