@@ -100,6 +100,8 @@ export class Game {
 
   #score = new Map();
 
+  #startTime;
+
   #numberUtility;
 
   start() {
@@ -178,6 +180,15 @@ export class Game {
   winGame(catcherId) {
     return catcherId
   }
+
+  isGameOverByTime() {
+    return (Date.now() - this.#startTime) > this.#settings.gameTime;
+  }
+
+  loseGame() {
+    return 'Glitch wins'
+  }
+
 
   #glitchJump() {
     this.#glitch.position = this.#numberUtility.getRandomPosition(
@@ -265,13 +276,15 @@ export class Game {
     }
   }
 
-
   /**
    * @internal Used only for testing purposes
    */
+
   __forceScore(catcherId, score, strike = 0) {
     this.#score.set(catcherId, { points: score, glitchStrike: strike });
   }
 
-
+  __forceStartTime(ms) {
+    this.#startTime = ms;
+  }
 }

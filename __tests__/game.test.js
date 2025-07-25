@@ -533,6 +533,41 @@ describe('game' , () => {
     expect(testGame.winGame(1)).toEqual(testGame.catcherOne.id);
   });
 
+  it('should check if the game is over by time' , () => {
+    game.__forceStartTime(Date.now() - 130000);
+    expect(game.isGameOverByTime()).toBeTruthy();
+
+    game.__forceStartTime(Date.now() - 90000);
+    expect(game.isGameOverByTime()).toBeFalsy();
+  });
+
+  it('should mark game as over on lose' , () => {
+    game.loseGame();
+    expect(game.loseGame()).toBe('Glitch wins');
+  });
+
+  it('Glitch should win if time expired and no Catcher reached score target' , () => {
+    const testGame = new Game(new MockNumberUtility([
+                                                      new Position(1 , 1) , // CatcherOne
+                                                      new Position(2 , 2) , // CatcherTwo
+                                                      new Position(0 , 0)  // Glitch
+                                                    ]));
+
+    testGame.settings = {
+      gameTime: 120000 ,
+      glitchJumpInterval: 1000000
+    };
+
+    testGame.start();
+
+    testGame.__forceScore(1 , 70);
+    testGame.__forceScore(2, 75);
+    testGame.__forceStartTime(Date.now() - 130000);
+
+    expect(testGame.getCatcherScore(1)).toBe(70);
+    expect(testGame.getCatcherScore(2)).toBe(75);
+    expect(testGame.isGameOverByTime()).toBeTruthy();
+  });
 });
 
 
