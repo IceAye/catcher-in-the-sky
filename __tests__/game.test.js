@@ -514,7 +514,7 @@ describe('game' , () => {
 
   it('CatcherOne should win if score is reached' , () => {
     const testGame = new Game(new MockNumberUtility([
-                                                      new Position(1 , 1) , // CatcherOne
+                                                      new Position(0 , 1) , // CatcherOne
                                                       new Position(2 , 2) , // CatcherTwo
                                                       new Position(0 , 0)  // Glitch
                                                     ]));
@@ -529,9 +529,12 @@ describe('game' , () => {
     testGame.__forceScore(1 , 70);
     expect(testGame.getCatcherScore(1)).toBe(70);
 
-    testGame.__forceScore(1 , 150);
+    testGame.__forceScore(1 , 135);
+    expect(testGame.getCatcherScore(1)).toBe(135);
+
+    testGame.moveCatcher(1, MOVE_DIRECTIONS.UP);
     expect(testGame.getCatcherScore(1)).toBe(150);
-    expect(testGame.win(1)).toEqual(testGame.catcherOne.id);
+    expect(testGame.status).toBe(GAME_STATUSES.COMPLETED);
   });
 
   it('should check if the game is over by time' , () => {

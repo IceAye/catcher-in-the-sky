@@ -181,7 +181,8 @@ export class Game {
       this.#updateScore(catcherId , 15);
 
       if (this.getCatcherScore(catcherId) >= 150) {
-        this.win(catcherId);
+        this.#win(catcherId);
+        this.stop();
       }
     }
 
@@ -200,7 +201,7 @@ export class Game {
     this.#settings.toggleSound();
   }
 
-  win(catcherId) {
+  #win(catcherId) {
     return catcherId
   }
 
