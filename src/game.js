@@ -102,6 +102,8 @@ export class Game {
 
   #startTime;
 
+  #gameTimerId;
+
   #numberUtility;
 
   start() {
@@ -113,8 +115,28 @@ export class Game {
     this.#runGlitchJumpInterval();
   }
 
-  async stop() {
+  startGameTimer() {
+    this.#gameTimerId = setInterval( () => {
+      const time = this.getFormattedTime();
+      console.log(time);
+
+      if (this.isGameOverByTime()) {
+        this.#lose();
+        this.stop();
+      }
+    }, 1000);
+  }
+
+  getFormattedTime() {
+    const remainingMs = this.#getRemainingTimeMs();
+    const minutes = Math.floor(remainingMs / 60000);
+    const seconds = Math.floor((remainingMs % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  stop() {
     clearInterval(this.#glitchSetIntervalId);
+    clearInterval(this.#gameTimerId);
     this.#status = GAME_STATUSES.COMPLETED;
   }
 
@@ -157,8 +179,9 @@ export class Game {
 
     if (wasGlitchCaught) {
       this.#updateScore(catcherId , 15);
+
       if (this.getCatcherScore(catcherId) >= 150) {
-        this.winGame(catcherId);
+        this.win(catcherId);
       }
     }
 
@@ -177,7 +200,7 @@ export class Game {
     this.#settings.toggleSound();
   }
 
-  winGame(catcherId) {
+  win(catcherId) {
     return catcherId
   }
 
@@ -185,7 +208,7 @@ export class Game {
     return (Date.now() - this.#startTime) > this.#settings.gameTime;
   }
 
-  loseGame() {
+  #lose() {
     return 'Glitch wins'
   }
 
@@ -274,6 +297,12 @@ export class Game {
       score.points -= 3;
       score.glitchStrike = 0;
     }
+  }
+
+  #getRemainingTimeMs() {
+    const elapsed = Date.now() - this.#startTime;
+    const total = this.#settings.gameTime;
+    return Math.max(total - elapsed, 0);
   }
 
   /**
