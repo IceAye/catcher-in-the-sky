@@ -6,6 +6,7 @@ import { SkySize } from '../src/sky-size.js';
 import { Position } from '../src/position.js';
 import { MockNumberUtility } from './utils/mock-number-utility.js';
 
+
 describe('game' , () => {
   let game;
 
@@ -530,7 +531,7 @@ describe('game' , () => {
 
     testGame.__forceScore(1 , 150);
     expect(testGame.getCatcherScore(1)).toBe(150);
-    expect(testGame.winGame(1)).toEqual(testGame.catcherOne.id);
+    expect(testGame.win(1)).toEqual(testGame.catcherOne.id);
   });
 
   it('should check if the game is over by time' , () => {
@@ -539,11 +540,6 @@ describe('game' , () => {
 
     game.__forceStartTime(Date.now() - 90000);
     expect(game.isGameOverByTime()).toBeFalsy();
-  });
-
-  it('should mark game as over on lose' , () => {
-    game.loseGame();
-    expect(game.loseGame()).toBe('Glitch wins');
   });
 
   it('Glitch should win if time expired and no Catcher reached score target' , () => {
@@ -559,7 +555,6 @@ describe('game' , () => {
     };
 
     testGame.start();
-
     testGame.__forceScore(1 , 70);
     testGame.__forceScore(2, 75);
     testGame.__forceStartTime(Date.now() - 130000);
@@ -567,6 +562,39 @@ describe('game' , () => {
     expect(testGame.getCatcherScore(1)).toBe(70);
     expect(testGame.getCatcherScore(2)).toBe(75);
     expect(testGame.isGameOverByTime()).toBeTruthy();
+  });
+
+  it('should start the timer and display formatted time every second' , () => {
+    jest.useFakeTimers();
+
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(game, 'getFormattedTime').mockReturnValue('00:00');
+
+    game.start();
+    game.startGameTimer();
+    jest.advanceTimersByTime(3000);
+
+    expect(logSpy).toHaveBeenCalledTimes(3);
+    expect(logSpy).toHaveBeenCalledWith('00:00');
+  });
+
+  it('should set status to completed when stop is called',  () => {
+    game.start();
+    game.stop();
+
+    expect(game.status).toBe(GAME_STATUSES.COMPLETED);
+  });
+
+  it('should stop the game if time is over and change the final status', () => {
+    jest.useFakeTimers();
+    game.__forceStartTime(Date.now() - 130000);
+
+    game.start();
+    game.startGameTimer();
+    jest.advanceTimersByTime(1000);
+
+    expect(game.isGameOverByTime()).toBe(true);
+    expect(game.status).toBe(GAME_STATUSES.COMPLETED);
   });
 });
 
