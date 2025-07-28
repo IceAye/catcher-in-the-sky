@@ -1,15 +1,21 @@
 import { SkySize } from '../sky-size.js';
 import { GlitchSpeedJump } from '../glitch-speed-jump.js';
+import { PointsToWin } from '../points-to-win.js';
 
 export class Settings {
-  constructor({ skySize = {} , level, gameTime = 1000 * 60 * 2 } = {}) {
+  constructor({ skySize = {} , level, gameTime = 1000 * 60 * 2, points = {} } = {}) {
     this.skySize = new SkySize(skySize);
     this.glitchSpeedJump = new GlitchSpeedJump(level);
     this.gameTime = gameTime;
+    this.pointsToWin = new PointsToWin(points);
   }
   soundEnabled = true;
 
   toggleSound() {
     this.soundEnabled = !this.soundEnabled;
+  }
+
+  getPointsToWin() {
+    return this.pointsToWin.getPoints();
   }
 }
