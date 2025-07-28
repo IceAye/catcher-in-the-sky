@@ -112,7 +112,11 @@ describe('game' , () => {
                                       interval: 1200
                                     } ,
                                     gameTime: 120000 ,
-                                    soundEnabled: true
+                                    soundEnabled: true,
+                                    pointsToWin: {
+                                      mode: 'duel',
+                                      total: 150
+                                    }
                                   });
 
     // didn't change because of deep copy
@@ -125,6 +129,8 @@ describe('game' , () => {
       }
     };
     expect(game.settings.skySize).toEqual({ columnsCount: 3 , rowsCount: 3 });
+    expect(game.settings.pointsToWin.mode).toBe('duel');
+    expect(game.settings.pointsToWin.total).toBe(150);
   });
 
 
@@ -149,6 +155,22 @@ describe('game' , () => {
     };
 
     expect(game.settings.gameTime).toBe(180000);
+
+    game.settings = {
+      points: {
+        mode: 'blitz'
+      }
+    }
+    expect(game.settings.pointsToWin.mode).toBe('blitz');
+
+    game.settings = {
+      points: {
+        mode: 'custom',
+        customPoints: 220
+      }
+    }
+    expect(game.settings.pointsToWin.mode).toBe('custom')
+    expect(game.settings.pointsToWin.total).toBe(220)
   });
 
   it('sound should be enabled and disabled by user' , () => {
@@ -521,7 +543,7 @@ describe('game' , () => {
 
     testGame.settings = {
       gameTime: 120000 ,
-      glitchJumpInterval: 1000000
+      glitchJumpInterval: 1000000,
     };
 
     testGame.start();
