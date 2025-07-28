@@ -3,6 +3,7 @@ import { Settings } from './shared/settings.js';
 import { Catcher } from './catcher.js';
 import { Glitch } from './glitch.js';
 import { GlitchSpeedJump } from './glitch-speed-jump.js';
+import { PointsToWin } from './points-to-win.js';
 
 export class Game {
   constructor(numberUtility , gameSettings) {
@@ -70,7 +71,11 @@ export class Game {
         ...this.#settings.glitchSpeedJump
       } ,
       gameTime: this.#settings.gameTime ,
-      soundEnabled: this.#settings.soundEnabled
+      soundEnabled: this.#settings.soundEnabled ,
+      pointsToWin: {
+        mode: this.#settings.pointsToWin.mode,
+        total: this.#settings.pointsToWin.getPoints()
+      }
     };
   }
 
@@ -90,11 +95,19 @@ export class Game {
 
     const gameTime = settings.gameTime ? settings.gameTime : this.#settings.gameTime;
 
+    const { points } = settings;
+    const mode = points?.mode ?? 'duel';
+    const customPoints = points?.customPoints ?? null;
+
+
+    const pointsToWin = new PointsToWin({ mode, customPoints }) ?? this.#settings.pointsToWin
+
     this.#settings = {
       ...this.#settings ,
       skySize ,
       glitchSpeedJump ,
-      gameTime
+      gameTime ,
+      pointsToWin,
     };
   }
 
@@ -116,7 +129,7 @@ export class Game {
   }
 
   startGameTimer() {
-    this.#gameTimerId = setInterval( () => {
+    this.#gameTimerId = setInterval(() => {
       const time = this.getFormattedTime();
       console.log(time);
 
@@ -124,14 +137,14 @@ export class Game {
         this.#lose();
         this.stop();
       }
-    }, 1000);
+    } , 1000);
   }
 
   getFormattedTime() {
     const remainingMs = this.#getRemainingTimeMs();
     const minutes = Math.floor(remainingMs / 60000);
     const seconds = Math.floor((remainingMs % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2 , '0')}`;
   }
 
   stop() {
@@ -163,13 +176,13 @@ export class Game {
         throw new Error('Invalid direction');
     }
 
-    if (!this.#isInsideSky(newPosition)){
-      this.#updateScore(catcherId, -5);
+    if (!this.#isInsideSky(newPosition)) {
+      this.#updateScore(catcherId , -5);
       return;
     }
 
     if (this.#isCellBusyByOtherCatcher(newPosition , catcherId)) {
-      this.#updateScore(catcherId, -8);
+      this.#updateScore(catcherId , -8);
       return;
     }
 
@@ -179,8 +192,7 @@ export class Game {
 
     if (wasGlitchCaught) {
       this.#updateScore(catcherId , 15);
-
-      if (this.getCatcherScore(catcherId) >= 150) {
+      if (this.getCatcherScore(catcherId) >= this.#settings.pointsToWin.getPoints()) {
         this.#win(catcherId);
         this.stop();
       }
@@ -202,7 +214,7 @@ export class Game {
   }
 
   #win(catcherId) {
-    return catcherId
+    return catcherId;
   }
 
   isGameOverByTime() {
@@ -210,7 +222,7 @@ export class Game {
   }
 
   #lose() {
-    return 'Glitch wins'
+    return 'Glitch wins';
   }
 
 
@@ -283,7 +295,7 @@ export class Game {
                     : currentScore.glitchStrike - 1
     };
 
-   this.#applyGlitchStrikeEffects(updatedScore)
+    this.#applyGlitchStrikeEffects(updatedScore);
 
     this.#score.set(catcherId , updatedScore);
   }
@@ -303,15 +315,15 @@ export class Game {
   #getRemainingTimeMs() {
     const elapsed = Date.now() - this.#startTime;
     const total = this.#settings.gameTime;
-    return Math.max(total - elapsed, 0);
+    return Math.max(total - elapsed , 0);
   }
 
   /**
    * @internal Used only for testing purposes
    */
 
-  __forceScore(catcherId, score, strike = 0) {
-    this.#score.set(catcherId, { points: score, glitchStrike: strike });
+  __forceScore(catcherId , score , strike = 0) {
+    this.#score.set(catcherId , { points: score , glitchStrike: strike });
   }
 
   __forceStartTime(ms) {
