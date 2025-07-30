@@ -13,4 +13,8 @@ export class GlitchSpeedJump {
     this.level = level;
     this.interval = GlitchSpeedJump.levels[level];
   }
+
+  getLevel() {
+    return this.level
+  }
 }
