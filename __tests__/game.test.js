@@ -610,16 +610,45 @@ describe('game' , () => {
     expect(game.status).toBe(GAME_STATUSES.COMPLETED);
   });
 
-  it('should stop the game if time is over and change the final status', () => {
+  it('should call isGameOverByTime once, stop the game if time is over and change the final status', () => {
     jest.useFakeTimers();
-    game.__forceStartTime(Date.now() - 130000);
+    const spyOnGameOver = jest.spyOn(game, 'isGameOverByTime');
 
+    game.start();
+    game.startGameTimer();
+    jest.setSystemTime(new Date(Date.now() + 130000));
+
+    jest.advanceTimersByTime(1000);
+    expect(spyOnGameOver).toHaveBeenCalled();
+    expect(game.status).toBe(GAME_STATUSES.COMPLETED);
+  });
+
+  it('should change game status after restarting' , () => {
+    game.start();
+    game.startGameTimer();
+    expect(game.status).toBe(GAME_STATUSES.IN_PROGRESS);
+
+    game.stop();
+    expect(game.status).toBe(GAME_STATUSES.COMPLETED);
+
+    game.restart();
+    expect(game.status).toBe(GAME_STATUSES.PENDING);
+
+  });
+
+  it('should clean up game intervals' , () => {
+    jest.useFakeTimers();
     game.start();
     game.startGameTimer();
     jest.advanceTimersByTime(1000);
 
-    expect(game.isGameOverByTime()).toBe(true);
-    expect(game.status).toBe(GAME_STATUSES.COMPLETED);
+    const minutesInTimer = Number(game.getFormattedTime()[0]);
+    const minutesInGameTime = game.settings.gameTime / 60000;
+    expect(minutesInTimer).toBeLessThan(minutesInGameTime);
+
+    game.restart();
+    const minutesAfterRestart = Number(game.getFormattedTime()[0]);
+    expect(minutesAfterRestart).toBe(0);
   });
 });
 
