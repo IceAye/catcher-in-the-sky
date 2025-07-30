@@ -113,7 +113,7 @@ export class Game {
 
   #score = new Map();
 
-  #startTime;
+  #startTime = null;
 
   #gameTimerId;
 
@@ -129,6 +129,7 @@ export class Game {
   }
 
   startGameTimer() {
+    this.#startTime = Date.now();
     this.#gameTimerId = setInterval(() => {
       const time = this.getFormattedTime();
       console.log(time);
@@ -148,9 +149,19 @@ export class Game {
   }
 
   stop() {
+    this.#cleanup();
+    this.#status = GAME_STATUSES.COMPLETED;
+  }
+
+  restart() {
+    this.#cleanup();
+    this.#status = GAME_STATUSES.PENDING;
+  }
+
+  #cleanup() {
+    this.#startTime = null;
     clearInterval(this.#glitchSetIntervalId);
     clearInterval(this.#gameTimerId);
-    this.#status = GAME_STATUSES.COMPLETED;
   }
 
   moveCatcher(catcherId , direction) {
@@ -218,6 +229,7 @@ export class Game {
   }
 
   isGameOverByTime() {
+    if (typeof this.#startTime !== 'number') return false;
     return (Date.now() - this.#startTime) > this.#settings.gameTime;
   }
 
