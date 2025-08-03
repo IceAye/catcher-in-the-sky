@@ -1,6 +1,6 @@
-import { SkySize } from '../sky-size.js';
-import { GlitchSpeedJump } from '../glitch-speed-jump.js';
-import { PointsToWin } from '../points-to-win.js';
+import { SkySize } from '../config/sky-size.js';
+import { GlitchSpeedJump } from '../config/glitch-speed-jump.js';
+import { PointsToWin } from '../config/points-to-win.js';
 
 export class Settings {
   constructor({ skySize = {} , level , gameTime = 1000 * 60 * 2 , points = {} } = {}) {

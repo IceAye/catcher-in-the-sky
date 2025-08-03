@@ -1,9 +1,9 @@
-import { NumberUtility } from '../src/number-utility.js';
-import { Game } from '../src/game.js';
+import { NumberUtility } from '../src/shared/number-utility.js';
+import { Game } from '../src/back/models/game.js';
 import { GAME_STATUSES , MOVE_DIRECTIONS } from '../src/shared/constants.js';
 import { Settings } from '../src/shared/settings.js';
-import { SkySize } from '../src/sky-size.js';
-import { Position } from '../src/position.js';
+import { SkySize } from '../src/config/sky-size.js';
+import { Position } from '../src/config/position.js';
 import { MockNumberUtility } from './utils/mock-number-utility.js';
 
 

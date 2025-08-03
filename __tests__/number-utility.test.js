@@ -1,4 +1,4 @@
-import { NumberUtility } from '../src/number-utility.js';
+import { NumberUtility } from '../src/shared/number-utility.js';
 
 
 describe('Number Utility', () => {
