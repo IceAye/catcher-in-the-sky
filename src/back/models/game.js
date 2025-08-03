@@ -1,9 +1,9 @@
-import { GAME_STATUSES , MOVE_DIRECTIONS } from './shared/constants.js';
-import { Settings } from './shared/settings.js';
+import { GAME_STATUSES , MOVE_DIRECTIONS } from '../../shared/constants.js';
+import { Settings } from '../../shared/settings.js';
 import { Catcher } from './catcher.js';
 import { Glitch } from './glitch.js';
-import { GlitchSpeedJump } from './glitch-speed-jump.js';
-import { PointsToWin } from './points-to-win.js';
+import { GlitchSpeedJump } from '../../config/glitch-speed-jump.js';
+import { PointsToWin } from '../../config/points-to-win.js';
 
 export class Game {
   constructor(numberUtility , gameSettings) {
@@ -24,7 +24,9 @@ export class Game {
   }
 
   get glitchPosition() {
-    return this.#glitch.position;
+    return this.#glitch
+           ? this.#glitch.position
+           : { x: null, y: null };
   }
 
   set glitchPosition(newPosition) {
@@ -42,7 +44,7 @@ export class Game {
   }
 
   get catcherOnePosition() {
-    return this.#catcherOne.position;
+    return this.#catcherOne ? this.#catcherOne.position : {x: null, y: null};
   }
 
   set catcherOnePosition(newPosition) {
@@ -56,7 +58,7 @@ export class Game {
   }
 
   get catcherTwoPosition() {
-    return this.#catcherTwo.position;
+    return this.#catcherTwo ? this.#catcherTwo.position : {x: null, y: null};
   }
 
   #settings;
@@ -109,6 +111,8 @@ export class Game {
       gameTime ,
       pointsToWin,
     };
+
+    this.#notify();
   }
 
   #score = new Map();
@@ -119,6 +123,8 @@ export class Game {
 
   #numberUtility;
 
+  #subscribers = [];
+
   start() {
     if (this.#status === GAME_STATUSES.PENDING) {
       this.#createUnits();
@@ -126,6 +132,8 @@ export class Game {
     }
 
     this.#runGlitchJumpInterval();
+    this.#notify();
+
   }
 
   startGameTimer() {
@@ -199,6 +207,9 @@ export class Game {
 
     catcher.position = newPosition;
 
+    this.#notify();
+
+
     const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId);
 
     if (wasGlitchCaught) {
@@ -220,17 +231,30 @@ export class Game {
     return this.#score.get(catcherId)?.glitchStrike ?? 0;
   }
 
+  isGameOverByTime() {
+    if (typeof this.#startTime !== 'number') return false;
+    return (Date.now() - this.#startTime) > this.#settings.gameTime;
+  }
+
   toggleSound() {
     this.#settings.toggleSound();
   }
 
-  #win(catcherId) {
-    return catcherId;
+  subscribe(newSubscriber) {
+    this.#subscribers.push(newSubscriber);
+
   }
 
-  isGameOverByTime() {
-    if (typeof this.#startTime !== 'number') return false;
-    return (Date.now() - this.#startTime) > this.#settings.gameTime;
+  unsubscribe(subscriber) {
+      this.#subscribers.filter(s => s !== subscriber);
+  }
+
+  #notify() {
+    this.#subscribers.forEach(s => s());
+  }
+
+  #win(catcherId) {
+    return catcherId;
   }
 
   #lose() {
@@ -246,6 +270,7 @@ export class Game {
   #runGlitchJumpInterval() {
     this.#glitchSetIntervalId = setInterval(() => {
       this.#glitchJump();
+      this.#notify();
     } , this.#settings.glitchSpeedJump.interval);
   }
 
