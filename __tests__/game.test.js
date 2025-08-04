@@ -594,7 +594,6 @@ describe('game' , () => {
 
     game.start();
 
-    const timeOnStart = game.remainingTimeMs;
     expect(game.remainingTimeMs).toBeNull();
 
     game.startGameTimer();
@@ -646,7 +645,7 @@ describe('game' , () => {
     expect(minutesInTimer).toBeLessThan(minutesInGameTime);
 
     game.restart();
-    const minutesAfterRestart = game.remainingTimeMs;;
+    const minutesAfterRestart = game.remainingTimeMs;
     expect(minutesAfterRestart).toBeNull();
   });
 });

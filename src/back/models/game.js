@@ -133,7 +133,6 @@ export class Game {
 
     this.#runGlitchJumpInterval();
     this.#notify();
-
   }
 
   get remainingTimeMs() {
