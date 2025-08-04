@@ -2,10 +2,12 @@ import { GAME_STATUSES , MOVE_DIRECTIONS } from './shared/constants.js';
 
 export class View {
   #root;
+  #gameClock;
+  #skyGridContainer;
 
   constructor() {
     this.#root = document.getElementById('root');
-    window.addEventListener('keyup', (event) => {
+    window.addEventListener('keyup' , (event) => {
       switch (event.code) {
         case 'ArrowUp':
           this.#onCatcherOneMoveObserver?.({ direction: MOVE_DIRECTIONS.UP });
@@ -19,13 +21,6 @@ export class View {
         case 'ArrowRight':
           this.#onCatcherOneMoveObserver?.({ direction: MOVE_DIRECTIONS.RIGHT });
           break;
-        default:
-          break;
-      }
-    });
-
-    window.addEventListener('keyup', (event) => {
-      switch (event.code) {
         case 'KeyW':
           this.#onCatcherTwoMoveObserver?.({ direction: MOVE_DIRECTIONS.UP });
           break;
@@ -42,6 +37,7 @@ export class View {
           break;
       }
     });
+
   }
 
   render(dto) {
@@ -60,19 +56,20 @@ export class View {
   #renderStartScreen(dto) {
     const button = document.createElement('button');
     button.append('Start game');
-    button.addEventListener('click', () => {
+    button.addEventListener('click' , () => {
       this.#onStartObserver?.();
-    })
+    });
 
     this.#root.appendChild(button);
   }
 
   #renderGameScreen(dto) {
-    this.#renderGrid(dto);
+    this.#renderFormattedTime(dto.remainingTime);
+    this.#renderSkyGrid(dto);
   }
 
-  #renderGrid(dto) {
-    const table = document.createElement('table');
+  #renderSkyGrid(dto) {
+    this.#skyGridContainer = document.createElement('table');
 
     for (let y = 0; y < 4; y++) {
       const row = document.createElement('tr');
@@ -81,35 +78,46 @@ export class View {
         const cell = document.createElement('td');
 
         if (dto.glitchPosition.x === x && dto.glitchPosition.y === y) {
-          cell.append('🎇')
+          cell.append('🎇');
         }
 
         if (dto.catcherOnePosition?.x === x && dto.catcherOnePosition?.y === y) {
-          cell.append('🏃‍♀️')
+          cell.append('🏃‍♀️');
         }
 
         if (dto.catcherTwoPosition.x === x && dto.catcherTwoPosition.y === y) {
-          cell.append('🏃🏽‍♂️')
+          cell.append('🏃🏽‍♂️');
         }
 
         row.append(cell);
       }
-      table.append(row);
+      this.#skyGridContainer.append(row);
     }
-    this.#root.append(table);
+    this.#root.append(this.#skyGridContainer);
+  }
+
+  #renderFormattedTime({ minutes , seconds }) {
+    this.#gameClock = document.createElement('div');
+    this.#gameClock.classList.add('game-clock');
+    this.#gameClock.textContent = `${minutes}:${seconds.toString().padStart(2 , '0')}`;
+
+    this.#root.appendChild(this.#gameClock);
   }
 
   #onStartObserver;
+
   set onstart(observer) {
     this.#onStartObserver = observer;
   }
 
   #onCatcherOneMoveObserver;
+
   set onCatcherOneMove(observer) {
     this.#onCatcherOneMoveObserver = observer;
   }
 
   #onCatcherTwoMoveObserver;
+
   set onCatcherTwoMove(observer) {
     this.#onCatcherTwoMoveObserver = observer;
   }
