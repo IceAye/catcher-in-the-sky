@@ -589,18 +589,17 @@ describe('game' , () => {
     expect(testGame.isGameOverByTime()).toBeTruthy();
   });
 
-  it('should start the timer and display formatted time every second' , () => {
+  it('should start the timer and change the time' , () => {
     jest.useFakeTimers();
 
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(game, 'getFormattedTime').mockReturnValue('00:00');
-
     game.start();
+
+    const timeOnStart = game.remainingTimeMs;
+    expect(game.remainingTimeMs).toBeNull();
+
     game.startGameTimer();
     jest.advanceTimersByTime(3000);
-
-    expect(logSpy).toHaveBeenCalledTimes(3);
-    expect(logSpy).toHaveBeenCalledWith('00:00');
+    expect(game.remainingTimeMs).toBeGreaterThan(0);
   });
 
   it('should set status to completed when stop is called',  () => {
@@ -642,13 +641,13 @@ describe('game' , () => {
     game.startGameTimer();
     jest.advanceTimersByTime(1000);
 
-    const minutesInTimer = Number(game.getFormattedTime()[0]);
-    const minutesInGameTime = game.settings.gameTime / 60000;
+    const minutesInTimer = game.remainingTimeMs;
+    const minutesInGameTime = game.settings.gameTime;
     expect(minutesInTimer).toBeLessThan(minutesInGameTime);
 
     game.restart();
-    const minutesAfterRestart = Number(game.getFormattedTime()[0]);
-    expect(minutesAfterRestart).toBe(0);
+    const minutesAfterRestart = game.remainingTimeMs;;
+    expect(minutesAfterRestart).toBeNull();
   });
 });
 

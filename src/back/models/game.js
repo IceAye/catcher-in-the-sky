@@ -136,24 +136,8 @@ export class Game {
 
   }
 
-  startGameTimer() {
-    this.#startTime = Date.now();
-    this.#gameTimerId = setInterval(() => {
-      const time = this.getFormattedTime();
-      console.log(time);
-
-      if (this.isGameOverByTime()) {
-        this.#lose();
-        this.stop();
-      }
-    } , 1000);
-  }
-
-  getFormattedTime() {
-    const remainingMs = this.#getRemainingTimeMs();
-    const minutes = Math.floor(remainingMs / 60000);
-    const seconds = Math.floor((remainingMs % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2 , '0')}`;
+  get remainingTimeMs() {
+    return this.#startTime ? this.#calculateRemainingTimeMs() : null;
   }
 
   stop() {
@@ -349,7 +333,22 @@ export class Game {
     }
   }
 
-  #getRemainingTimeMs() {
+  startGameTimer() {
+    this.#startTime = Date.now();
+
+    this.#gameTimerId = setInterval(() => {
+      this.#calculateRemainingTimeMs();
+      this.#notify();
+
+      if (this.isGameOverByTime()) {
+        this.#lose();
+        this.stop();
+        this.#notify();
+      }
+    } , 1000);
+  }
+
+  #calculateRemainingTimeMs() {
     const elapsed = Date.now() - this.#startTime;
     const total = this.#settings.gameTime;
     return Math.max(total - elapsed , 0);
