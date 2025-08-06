@@ -1,10 +1,6 @@
 import { GAME_STATUSES , MOVE_DIRECTIONS } from './shared/constants.js';
 
 export class View {
-  #root;
-  #gameClock;
-  #skyGridContainer;
-
   constructor() {
     this.#root = document.getElementById('root');
     window.addEventListener('keyup' , (event) => {
@@ -37,55 +33,72 @@ export class View {
           break;
       }
     });
-
   }
 
-  render(dto) {
+  #root;
+  #gameClock;
+  #skyGridContainer;
+  #scoreBoard;
+
+  render(gameDTO, settingsDTO) {
     this.#root.innerHTML = '';
 
-    this.#root.append(dto.status);
+    this.#root.append(gameDTO.status);
 
-    if (dto.status === GAME_STATUSES.PENDING) {
-      this.#renderStartScreen(dto);
-    } else if (dto.status === GAME_STATUSES.IN_PROGRESS) {
-      this.#renderGameScreen(dto);
+    if (gameDTO.status === GAME_STATUSES.PENDING) {
+      this.#renderStartScreen();
+    } else if (gameDTO.status === GAME_STATUSES.IN_PROGRESS) {
+      this.#renderGameScreen(gameDTO, settingsDTO);
     }
-
   }
 
-  #renderStartScreen(dto) {
+  #renderStartScreen() {
+    const startScreen = document.createElement('div');
+    startScreen.appendChild(this.#renderButton());
+
+    this.#root.appendChild(startScreen);
+  }
+
+  #renderButton() {
     const button = document.createElement('button');
     button.append('Start game');
     button.addEventListener('click' , () => {
       this.#onStartObserver?.();
     });
 
-    this.#root.appendChild(button);
+    return button;
   }
 
-  #renderGameScreen(dto) {
-    this.#renderFormattedTime(dto.remainingTime);
-    this.#renderSkyGrid(dto);
+  #renderGameScreen(gameDTO, settingsDTO) {
+    const gameScreen = document.createElement('div');
+
+    gameScreen.appendChild(this.#renderFormattedTime(gameDTO));
+    gameScreen.appendChild(this.#renderSkyGrid(gameDTO, settingsDTO));
+    gameScreen.appendChild(this.#renderScoreBoard(gameDTO, settingsDTO));
+
+    this.#root.appendChild(gameScreen);
   }
 
-  #renderSkyGrid(dto) {
+  #renderSkyGrid(gameDTO, settingsDTO) {
+    const {rowsCount, columnsCount} = settingsDTO.skySize;
+
     this.#skyGridContainer = document.createElement('table');
 
-    for (let y = 0; y < 4; y++) {
+    for (let y = 0; y < rowsCount; y++) {
       const row = document.createElement('tr');
 
-      for (let x = 0; x < 4; x++) {
+      for (let x = 0; x < columnsCount; x++) {
         const cell = document.createElement('td');
 
-        if (dto.glitchPosition.x === x && dto.glitchPosition.y === y) {
+        if (gameDTO.glitchPosition.x === x && gameDTO.glitchPosition.y === y) {
           cell.append('🎇');
         }
 
-        if (dto.catcherOnePosition?.x === x && dto.catcherOnePosition?.y === y) {
+        if (gameDTO.catcherOnePosition.x === x && gameDTO.catcherOnePosition.y === y) {
           cell.append('🏃‍♀️');
         }
 
-        if (dto.catcherTwoPosition.x === x && dto.catcherTwoPosition.y === y) {
+        if (gameDTO.catcherTwoPosition.x === x && gameDTO.catcherTwoPosition.y === y) {
           cell.append('🏃🏽‍♂️');
         }
 
@@ -93,31 +106,62 @@ export class View {
       }
       this.#skyGridContainer.append(row);
     }
-    this.#root.append(this.#skyGridContainer);
+    return this.#skyGridContainer;
   }
 
-  #renderFormattedTime({ minutes , seconds }) {
+  #renderFormattedTime(gameDTO) {
+    const { minutes , seconds } = gameDTO.remainingTime;
+
     this.#gameClock = document.createElement('div');
     this.#gameClock.classList.add('game-clock');
     this.#gameClock.textContent = `${minutes}:${seconds.toString().padStart(2 , '0')}`;
 
-    this.#root.appendChild(this.#gameClock);
+   return this.#gameClock;
   }
 
-  #onStartObserver;
+  #renderScoreBoard(gameDTO, settingsDTO) {
+    const board = document.createElement('div');
 
+    board.appendChild(this.#renderCatchersPoints(gameDTO));
+    board.appendChild(this.#renderPointsToWin(settingsDTO));
+
+    return board;
+  }
+
+  #renderCatchersPoints(gameDTO) {
+    const {score} = gameDTO;
+
+    const fragment = document.createDocumentFragment();
+    for (const catcherId in score) {
+      const el = document.createElement('span');
+      el.textContent = score[catcherId].points;
+      fragment.appendChild(el);
+    }
+
+    return fragment;
+  }
+
+  #renderPointsToWin(settingsDTO) {
+    const {pointsToWin} = settingsDTO;
+
+    const pointsToWinLabel = document.createElement('span');
+    pointsToWinLabel.textContent = pointsToWin.total;
+
+    return pointsToWinLabel;
+  }
+
+
+  #onStartObserver;
   set onstart(observer) {
     this.#onStartObserver = observer;
   }
 
   #onCatcherOneMoveObserver;
-
   set onCatcherOneMove(observer) {
     this.#onCatcherOneMoveObserver = observer;
   }
 
   #onCatcherTwoMoveObserver;
-
   set onCatcherTwoMove(observer) {
     this.#onCatcherTwoMoveObserver = observer;
   }
