@@ -61,6 +61,7 @@ export class View {
 
   #renderButton() {
     const button = document.createElement('button');
+    button.classList.add('button', 'main-button');
     button.append('Start game');
     button.addEventListener('click' , () => {
       this.#onStartObserver?.();
@@ -72,9 +73,8 @@ export class View {
   #renderGameScreen(gameDTO, settingsDTO) {
     const gameScreen = document.createElement('div');
 
-    gameScreen.appendChild(this.#renderFormattedTime(gameDTO));
-    gameScreen.appendChild(this.#renderSkyGrid(gameDTO, settingsDTO));
     gameScreen.appendChild(this.#renderScoreBoard(gameDTO, settingsDTO));
+    gameScreen.appendChild(this.#renderSkyGrid(gameDTO, settingsDTO));
 
     this.#root.appendChild(gameScreen);
   }
@@ -83,12 +83,16 @@ export class View {
     const {rowsCount, columnsCount} = settingsDTO.skySize;
 
     this.#skyGridContainer = document.createElement('table');
+    this.#skyGridContainer.classList.add('table');
+
+    const tableBody = document.createElement('tbody');
 
     for (let y = 0; y < rowsCount; y++) {
       const row = document.createElement('tr');
 
       for (let x = 0; x < columnsCount; x++) {
         const cell = document.createElement('td');
+        cell.classList.add('cell');
 
         if (gameDTO.glitchPosition.x === x && gameDTO.glitchPosition.y === y) {
           cell.append('🎇');
@@ -104,38 +108,52 @@ export class View {
 
         row.append(cell);
       }
-      this.#skyGridContainer.append(row);
+      tableBody.appendChild(row)
     }
+    this.#skyGridContainer.append(tableBody);
     return this.#skyGridContainer;
   }
 
-  #renderFormattedTime(gameDTO) {
-    const { minutes , seconds } = gameDTO.remainingTime;
 
-    this.#gameClock = document.createElement('div');
-    this.#gameClock.classList.add('game-clock');
-    this.#gameClock.textContent = `${minutes}:${seconds.toString().padStart(2 , '0')}`;
-
-   return this.#gameClock;
-  }
 
   #renderScoreBoard(gameDTO, settingsDTO) {
     const board = document.createElement('div');
+    board.classList.add('result-container');
 
     board.appendChild(this.#renderCatchersPoints(gameDTO));
     board.appendChild(this.#renderPointsToWin(settingsDTO));
+    board.appendChild(this.#renderFormattedTime(gameDTO));
 
     return board;
+  }
+
+  #renderScoreBlock(title, value) {
+    const block = document.createElement('div');
+    block.className = 'result-block';
+
+    const titleEl = document.createElement('span');
+    titleEl.className = 'result-title';
+    titleEl.textContent = `${title}:`;
+
+    const valueEl = document.createElement('span');
+    valueEl.className = 'result';
+    valueEl.textContent = value;
+
+    block.appendChild(titleEl);
+    block.appendChild(valueEl);
+
+    return block;
   }
 
   #renderCatchersPoints(gameDTO) {
     const {score} = gameDTO;
 
     const fragment = document.createDocumentFragment();
+
     for (const catcherId in score) {
-      const el = document.createElement('span');
-      el.textContent = score[catcherId].points;
-      fragment.appendChild(el);
+      const title = `Catcher ${catcherId}`;
+      const block = this.#renderScoreBlock(title, score[catcherId].points);
+      fragment.appendChild(block);
     }
 
     return fragment;
@@ -143,11 +161,12 @@ export class View {
 
   #renderPointsToWin(settingsDTO) {
     const {pointsToWin} = settingsDTO;
+    return this.#renderScoreBlock('Points to win', pointsToWin.total);
+  }
 
-    const pointsToWinLabel = document.createElement('span');
-    pointsToWinLabel.textContent = pointsToWin.total;
-
-    return pointsToWinLabel;
+  #renderFormattedTime(gameDTO) {
+    const { minutes , seconds } = gameDTO.remainingTime;
+    return this.#renderScoreBlock('Remaining time', `${minutes}:${seconds.toString().padStart(2 , '0')}`);
   }
 
 
