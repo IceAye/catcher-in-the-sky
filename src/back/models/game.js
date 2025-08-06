@@ -1,4 +1,4 @@
-import { GAME_STATUSES , MOVE_DIRECTIONS } from '../../shared/constants.js';
+import { GAME_STATUSES , MOVE_DIRECTIONS , SCORE_RULES } from '../../shared/constants.js';
 import { Settings } from '../../shared/settings.js';
 import { Catcher } from './catcher.js';
 import { Glitch } from './glitch.js';
@@ -116,6 +116,9 @@ export class Game {
   }
 
   #score = new Map();
+  getScore() {
+    return new Map(this.#score);
+  }
 
   #startTime = null;
 
@@ -142,11 +145,13 @@ export class Game {
   stop() {
     this.#cleanup();
     this.#status = GAME_STATUSES.COMPLETED;
+    this.#notify();
   }
 
   restart() {
     this.#cleanup();
     this.#status = GAME_STATUSES.PENDING;
+    this.#notify();
   }
 
   #cleanup() {
@@ -179,26 +184,29 @@ export class Game {
     }
 
     if (!this.#isInsideSky(newPosition)) {
-      this.#updateScore(catcherId , -5);
+      this.#updateScore(catcherId , SCORE_RULES.OUT_OF_BOUNDS_PENALTY);
       return;
     }
 
     if (this.#isCellBusyByOtherCatcher(newPosition , catcherId)) {
-      this.#updateScore(catcherId , -8);
+      this.#updateScore(catcherId , SCORE_RULES.CELL_CONFLICT_PENALTY);
       return;
     }
 
     catcher.position = newPosition;
-
     this.#notify();
 
 
     const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId);
 
     if (wasGlitchCaught) {
-      this.#updateScore(catcherId , 15);
+      this.#updateScore(catcherId , SCORE_RULES.GLITCH_CATCH_REWARD);
+      this.#notify();
+
       if (this.getCatcherScore(catcherId) >= this.#settings.pointsToWin.getPoints()) {
         this.#win(catcherId);
+        this.#notify();
+
         this.stop();
       }
     }
@@ -303,6 +311,7 @@ export class Game {
       points: currentScore.points + delta
     };
     this.#score.set(catcherId , updatedScore);
+    this.#notify();
   }
 
   #updateGlitchStrike(catcherId , wasGlitchCaught) {
@@ -318,16 +327,17 @@ export class Game {
     this.#applyGlitchStrikeEffects(updatedScore);
 
     this.#score.set(catcherId , updatedScore);
+    this.#notify();
   }
 
   #applyGlitchStrikeEffects(score) {
-    if (score.glitchStrike === 3) {
-      score.points += 20;
+    if (score.glitchStrike === SCORE_RULES.GLITCH_FAST_CATCH_THRESHOLD) {
+      score.points += SCORE_RULES.GLITCH_FAST_CATCH_BONUS;
       score.glitchStrike = 1;
     }
 
-    if (score.glitchStrike === -5) {
-      score.points -= 3;
+    if (score.glitchStrike === SCORE_RULES.GLITCH_MISS_THRESHOLD) {
+      score.points -= SCORE_RULES.GLITCH_MISS_PENALTY;
       score.glitchStrike = 0;
     }
   }
