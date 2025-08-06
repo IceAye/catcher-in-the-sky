@@ -9,7 +9,7 @@ export class Controller {
   #view;
 
   init() {
-    this.#view.render(this.#mapModelToDTO());
+    this.#renderCurrentState();
     this.#view.onstart = () => {
       this.#start();
       this.#startGameTimer();
@@ -21,18 +21,22 @@ export class Controller {
       this.#model.moveCatcher(2, direction);
     }
     this.#model.subscribe(() => {
-      this.#view.render(this.#mapModelToDTO());
+      this.#renderCurrentState();
     });
   }
 
   #start() {
     this.#model.start();
-    this.#view.render( this.#mapModelToDTO());
+    this.#renderCurrentState();
   }
 
   #startGameTimer() {
     this.#model.startGameTimer();
-    this.#view.render(this.#mapModelToDTO())
+    this.#renderCurrentState();
+  }
+
+  #renderCurrentState() {
+    this.#view.render(this.#mapModelToDTO(), this.#mapSettingsToDTO());
   }
 
   #mapModelToDTO() {
@@ -41,7 +45,19 @@ export class Controller {
       glitchPosition:  { ...this.#model.glitchPosition },
       catcherOnePosition: {...this.#model.catcherOnePosition},
       catcherTwoPosition: {...this.#model.catcherTwoPosition},
-      remainingTime: this.#deriveTimeParts()
+      remainingTime: this.#deriveTimeParts(),
+      score: this.#deriveCatchersScore()
+    }
+  }
+
+  #mapSettingsToDTO() {
+    return {
+      skySize: { ...this.#model.settings.skySize },
+      gameTime: this.#model.settings.gameTime,
+      pointsToWin: {
+        mode: this.#model.settings.pointsToWin.mode,
+        total: this.#model.settings.pointsToWin.total
+      }
     }
   }
 
@@ -51,5 +67,16 @@ export class Controller {
       minutes: Math.floor(ms / 60000),
       seconds: Math.floor((ms % 60000) / 1000),
     };
+  }
+
+  #deriveCatchersScore() {
+    const scoreMap = this.#model.getScore();
+    const result = {};
+
+    for (const [id, { points, glitchStrike }] of scoreMap.entries()) {
+      result[id] = { points, glitchStrike };
+    }
+
+    return result;
   }
 }
