@@ -76,7 +76,8 @@ export class Game {
       soundEnabled: this.#settings.soundEnabled ,
       pointsToWin: {
         mode: this.#settings.pointsToWin.mode,
-        total: this.#settings.pointsToWin.getPoints()
+        total: this.#settings.pointsToWin.getPoints(),
+        presets: this.#settings.pointsPresets,
       }
     };
   }
@@ -97,7 +98,7 @@ export class Game {
 
     const gameTime = settings.gameTime ? settings.gameTime : this.#settings.gameTime;
 
-    const { points } = settings;
+    const points = settings.pointsToWin ? { ...settings.pointsToWin } : this.#settings.pointsToWin;
     const mode = points?.mode ?? 'duel';
     const customPoints = points?.customPoints ?? null;
 

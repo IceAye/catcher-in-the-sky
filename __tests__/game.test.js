@@ -115,7 +115,13 @@ describe('game' , () => {
                                     soundEnabled: true,
                                     pointsToWin: {
                                       mode: 'duel',
-                                      total: 150
+                                      total: 150,
+                                      presets: {
+                                        blitz: 50 ,
+                                        duel: 150 ,
+                                        marathon: 300 ,
+                                        custom: null
+                                      }
                                     }
                                   });
 
@@ -157,14 +163,14 @@ describe('game' , () => {
     expect(game.settings.gameTime).toBe(180000);
 
     game.settings = {
-      points: {
+      pointsToWin: {
         mode: 'blitz'
       }
     }
     expect(game.settings.pointsToWin.mode).toBe('blitz');
 
     game.settings = {
-      points: {
+      pointsToWin: {
         mode: 'custom',
         customPoints: 220
       }
