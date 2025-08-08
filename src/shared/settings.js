@@ -21,6 +21,10 @@ export class Settings {
     return this.pointsToWin.getPoints();
   }
 
+  get pointsPresets() {
+    return this.pointsToWin.presets;
+  }
+
   clone() {
     return new Settings({
                           skySize: this.skySize.clone?.() ?? {} ,

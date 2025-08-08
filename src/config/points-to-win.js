@@ -3,8 +3,8 @@ export class PointsToWin {
     this.mode = mode;
 
     this.presets = {
-      blitz: 50 ,
       duel: 150 ,
+      blitz: 50 ,
       marathon: 300 ,
       custom: customPoints
     };
