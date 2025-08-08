@@ -36,17 +36,22 @@ export class View {
   }
 
   #root;
-  #gameClock;
+
   #skyGridContainer;
-  #scoreBoard;
+
+  #settingsDraft;
+
 
   render(gameDTO, settingsDTO) {
     this.#root.innerHTML = '';
+    this.#root.classList.add('container');
 
     this.#root.append(gameDTO.status);
 
+    this.#renderSettingsBoard(settingsDTO);
+
     if (gameDTO.status === GAME_STATUSES.PENDING) {
-      this.#renderStartScreen();
+      this.#renderStartScreen(settingsDTO);
     } else if (gameDTO.status === GAME_STATUSES.IN_PROGRESS) {
       this.#renderGameScreen(gameDTO, settingsDTO);
     }
@@ -54,9 +59,65 @@ export class View {
 
   #renderStartScreen() {
     const startScreen = document.createElement('div');
+    startScreen.classList.add('main-elements');
+
     startScreen.appendChild(this.#renderButton());
 
     this.#root.appendChild(startScreen);
+  }
+
+  #renderSettingsBoard(settingsDTO) {
+    const {skySize, gameTime, pointsToWin} = settingsDTO;
+
+    const settingsBoard = document.createElement('div');
+    settingsBoard.classList.add('top-items');
+
+    settingsBoard.append(this.#renderConfigLine('Points to win', pointsToWin.presets || pointsToWin.mode, 'pointsToWin'));
+
+    this.#root.appendChild(settingsBoard) ;
+  }
+
+  #renderConfigLine(labelText, options, id) {
+    const configLine = document.createElement('div');
+    configLine.classList.add('line');
+
+    const labelEl = document.createElement('label');
+    labelEl.htmlFor = id;
+    labelEl.textContent = `${labelText}:`;
+
+    const selectEl = document.createElement('select');
+    selectEl.id = id;
+    selectEl.name = 'select';
+
+   this.#renderOptions(selectEl, options);
+
+    configLine.addEventListener('change', (event) => {
+      const selectedValue = event.target.value;
+      this.#settingsDraft = {...this.#settingsDraft, [id] : { mode: selectedValue} }
+    })
+
+    configLine.append(labelEl);
+    configLine.append(selectEl);
+
+    return configLine;
+  }
+
+  #renderOptions(selectEl, options) {
+    if (typeof options === 'object' && options !== null) {
+      const rows = Object.keys(options);
+      for (const row of rows) {
+        this.#appendSingleOption(selectEl, row);
+      }
+    } else {
+      this.#appendSingleOption(selectEl, options);
+    }
+  }
+
+  #appendSingleOption(selectEl, value) {
+    const optionEl = document.createElement('option');
+    optionEl.value = String(value);
+    optionEl.textContent = String(value);
+    selectEl.append(optionEl);
   }
 
   #renderButton() {
@@ -64,7 +125,8 @@ export class View {
     button.classList.add('button', 'main-button');
     button.append('Start game');
     button.addEventListener('click' , () => {
-      this.#onStartObserver?.();
+      this.#settingsDraft ??= {};
+      this.#onStartObserver?.(this.#settingsDraft);
     });
 
     return button;
@@ -72,6 +134,8 @@ export class View {
 
   #renderGameScreen(gameDTO, settingsDTO) {
     const gameScreen = document.createElement('div');
+
+    gameScreen.classList.add('main-elements');
 
     gameScreen.appendChild(this.#renderScoreBoard(gameDTO, settingsDTO));
     gameScreen.appendChild(this.#renderSkyGrid(gameDTO, settingsDTO));
@@ -113,8 +177,6 @@ export class View {
     this.#skyGridContainer.append(tableBody);
     return this.#skyGridContainer;
   }
-
-
 
   #renderScoreBoard(gameDTO, settingsDTO) {
     const board = document.createElement('div');
@@ -184,4 +246,5 @@ export class View {
   set onCatcherTwoMove(observer) {
     this.#onCatcherTwoMoveObserver = observer;
   }
+
 }
