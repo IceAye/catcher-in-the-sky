@@ -74,6 +74,9 @@ export class View {
 
     settingsBoard.append(this.#renderConfigLine('Points to win', pointsToWin.presets || pointsToWin.mode, 'pointsToWin'));
 
+    //todo: skySize settings
+    settingsBoard.append(this.#renderConfigLine('Sky size', [], 'skySize'));
+
     this.#root.appendChild(settingsBoard) ;
   }
 
@@ -85,19 +88,36 @@ export class View {
     labelEl.htmlFor = id;
     labelEl.textContent = `${labelText}:`;
 
+    const slot = document.createElement('div');
+    slot.classList.add('slot');
+
     const selectEl = document.createElement('select');
     selectEl.id = id;
+    selectEl.classList.add('slot');
     selectEl.name = 'select';
 
    this.#renderOptions(selectEl, options);
+   slot.appendChild(selectEl);
 
     configLine.addEventListener('change', (event) => {
-      const selectedValue = event.target.value;
-      this.#settingsDraft = {...this.#settingsDraft, [id] : { mode: selectedValue} }
+      if (event.target.tagName === 'SELECT') {
+        const selectedValue = event.target.value;
+
+        if (selectedValue === 'custom') {
+          slot.innerHTML = '';
+          const input = this.#appendCustomInput(id);
+          slot.appendChild(input);
+          input.focus();
+        } else {
+          this.#settingsDraft = {
+            ...this.#settingsDraft,
+            [id]: { mode: selectedValue }
+          };
+        }
+      }
     })
 
-    configLine.append(labelEl);
-    configLine.append(selectEl);
+    configLine.append(labelEl, slot);
 
     return configLine;
   }
@@ -118,6 +138,19 @@ export class View {
     optionEl.value = String(value);
     optionEl.textContent = String(value);
     selectEl.append(optionEl);
+  }
+
+  #appendCustomInput(id) {
+    const inputEl = document.createElement('input');
+    inputEl.classList.add('slot');
+
+    inputEl.addEventListener('change', (event) => {
+      // todo: transfer type change to SettingsDraftBuilder
+      const inputValue = Number(event.currentTarget.value);
+      this.#settingsDraft = {...this.#settingsDraft, [id] : { mode: 'custom', customPoints: inputValue} }
+    })
+
+    return inputEl;
   }
 
   #renderButton() {
@@ -178,7 +211,7 @@ export class View {
     return this.#skyGridContainer;
   }
 
-  #renderScoreBoard(gameDTO, settingsDTO) {
+    #renderScoreBoard(gameDTO, settingsDTO) {
     const board = document.createElement('div');
     board.classList.add('result-container');
 
