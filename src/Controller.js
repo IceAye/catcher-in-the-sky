@@ -1,3 +1,7 @@
+import { SkySize } from './config/sky-size.js';
+import { GlitchSpeedJump } from './config/glitch-speed-jump.js';
+import { GAME_STATUSES } from './shared/constants.js';
+
 export class Controller {
 
   constructor(model , view) {
@@ -41,7 +45,12 @@ export class Controller {
   }
 
   #renderCurrentState() {
-    this.#view.render(this.#mapModelToDTO() , this.#mapSettingsToDTO());
+    let isSettingsActive = true;
+    if (this.#model.status === GAME_STATUSES.IN_PROGRESS) {
+      isSettingsActive = false;
+    }
+    this.#view.render(this.#mapModelToDTO() ,
+                      this.#mapSettingsToDTO(isSettingsActive));
   }
 
   #mapModelToDTO() {
@@ -55,18 +64,23 @@ export class Controller {
     };
   }
 
-  #mapSettingsToDTO() {
+  #mapSettingsToDTO(isSettingsActive) {
     return {
-      skySize: { ...this.#model.settings.skySize } ,
+      skySize: {
+        ...this.#model.settings.skySize,
+        presets: SkySize.presets
+      } ,
       gameTime: this.#model.settings.gameTime ,
       pointsToWin: {
         mode: this.#model.settings.pointsToWin.mode ,
         total: this.#model.settings.pointsToWin.total ,
         presets: this.#model.settings.pointsToWin.presets
       } ,
-      glitchSpeedJump: { ...this.#model.settings.glitchSpeedJump } ,
-      soundEnabled: this.#model.settings.soundEnabled
-      //todo: flag disabled for settings
+      glitchSpeedJump: {
+        levels: GlitchSpeedJump.levels
+      } ,
+      soundEnabled: this.#model.settings.soundEnabled,
+      isSettingsActive
     };
   }
 
