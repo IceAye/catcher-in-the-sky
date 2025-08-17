@@ -132,6 +132,7 @@ export class Game {
   start() {
     if (this.#status === GAME_STATUSES.PENDING) {
       this.#createUnits();
+      this.#initializeScoreMap();
       this.#status = GAME_STATUSES.IN_PROGRESS;
     }
 
@@ -283,6 +284,14 @@ export class Game {
       [catcherOneStartPosition , catcherTwoStartPosition] , this.settings.skySize);
 
     this.#glitch = new Glitch(glitchStartPosition);
+  }
+
+  #initializeScoreMap() {
+    this.#score = new Map();
+
+    for (const [id] of this.#catchers) {
+      this.#score.set(id, { points: 0, glitchStrike: 0 });
+    }
   }
 
   #isInsideSky(newPosition) {
