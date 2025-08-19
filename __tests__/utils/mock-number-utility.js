@@ -1,4 +1,4 @@
-import { NumberUtility } from '../../src/shared/number-utility.js';
+import { NumberUtility } from '../../src/shared/utils/number-utility.js';
 
 export class MockNumberUtility extends NumberUtility {
   #pointerIndex = 0;

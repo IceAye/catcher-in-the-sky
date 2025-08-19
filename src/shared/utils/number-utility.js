@@ -1,4 +1,4 @@
-import { Position } from '../config/position.js';
+import { Position } from '../../config/position.js';
 
 export class NumberUtility {
   getRandomIntegerNumber(fromInclusive, toExclusive) {

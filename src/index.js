@@ -1,4 +1,4 @@
-import { NumberUtility } from './shared/number-utility.js';
+import { NumberUtility } from './shared/utils/number-utility.js';
 import { Game } from './back/models/game.js';
 import { View } from './View.js';
 import { Controller } from './Controller.js';
