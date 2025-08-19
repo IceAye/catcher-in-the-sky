@@ -67,7 +67,7 @@ export class View {
   }
 
   #renderSettingsBoard(settingsDTO) {
-    const { skySize , gameTime , pointsToWin , glitchSpeedJump , isSettingsActive } = settingsDTO;
+    const { skySize , gameTime , pointsToWin , glitchSpeedJump , isSettingsActive , soundEnabled } = settingsDTO;
 
     const settingsBoard = document.createElement('div');
     settingsBoard.classList.add('top-items');
@@ -79,6 +79,7 @@ export class View {
     settingsBoard.append(
       this.#renderConfigLine('Glitch\'s jump speed' , glitchSpeedJump.levels , 'glitchSpeedJump' , isSettingsActive));
     settingsBoard.append(this.#renderConfigLine('Game time' , gameTime , 'gameTime' , isSettingsActive));
+    settingsBoard.append(this.#renderSoundBar(soundEnabled));
 
     this.#root.appendChild(settingsBoard);
   }
@@ -96,8 +97,7 @@ export class View {
 
     const element = typeof options === 'object'
                     ? slot.appendChild(this.#renderSelect(id , options))
-                    :
-                    slot.appendChild(this.#appendCustomInput(id , options));
+                    : slot.appendChild(this.#appendCustomInput(id , options));
 
     if (!isActive) {
       element.disabled = true;
@@ -146,8 +146,6 @@ export class View {
       for (const row of rows) {
         this.#appendSingleOption(selectEl , row);
       }
-    } else {
-      this.#appendSingleOption(selectEl , options);
     }
   }
 
@@ -162,8 +160,8 @@ export class View {
     const inputEl = document.createElement('input');
     inputEl.classList.add('slot');
     inputEl.type = 'number';
-    inputEl.value = value ?? '';
-    inputEl.placeholder = 'Enter the value';
+    inputEl.value = '';
+    inputEl.placeholder = value ?? 'Enter the value';
 
     inputEl.addEventListener('focus' , (event) => {
       if (inputEl.value === '0') {
@@ -276,6 +274,36 @@ export class View {
     return this.#skyGridContainer;
   }
 
+  #renderSoundBar(soundEnabled) {
+    const toggler = document.createElement('div');
+    toggler.classList.add('switch-button');
+
+    const togglerLabel = document.createElement('label');
+    togglerLabel.textContent = 'Sound on';
+
+    const togglerButton = document.createElement('button');
+    togglerButton.classList.add('toggle');
+
+    const spanEl = document.createElement('span');
+    spanEl.classList.add('icon-slider');
+    togglerButton.appendChild(spanEl);
+
+    togglerButton.addEventListener('click' , (soundEnabled) => {
+                                     this.toggleSound(soundEnabled);
+                                   }
+    );
+
+    toggler.append(togglerLabel , togglerButton);
+
+    return toggler;
+  }
+
+  // todo: connect with Model
+  toggleSound(soundEnabled) {
+    let toggleButton = document.querySelector('.toggle');
+    toggleButton.classList.toggle('on');
+  }
+
   #renderScoreBoard(gameDTO , settingsDTO) {
     const board = document.createElement('div');
     board.classList.add('result-container');
@@ -329,6 +357,43 @@ export class View {
     return this.#renderScoreBlock('Remaining time' , `${minutes}:${seconds.toString().padStart(2 , '0')}`);
   }
 
+  showModal(outcome , winnerId , stats) {
+    const modal = this.#renderModal(outcome , winnerId , stats);
+
+    this.#root.appendChild(modal);
+  }
+
+
+  #renderModal(outcome , winnerId , stats) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+
+    const iconSrc =
+      outcome === 'win' ? '/src/front/assets/icons/winnerIcon.svg' : '/src/front/assets/icons/lossIcon.svg';
+    const titleText = outcome === 'win' ? `Catcher ${winnerId} Win!` : 'You Lose!';
+    const subtitleText =
+      outcome === 'win' ? 'Congratulations' : 'You\'ll be lucky next time';
+
+    modal.innerHTML = `
+  <div class="modal-decoration">
+    <img src="${iconSrc}" alt="icon">
+  </div>
+  <div class="modal-elements">
+    <div class="title-modal">${titleText}</div>
+    <div class="text-modal">${subtitleText}</div>
+    ${outcome === 'win' ? `
+      <div class="modal-result">
+        <div class="result-block">
+          <span class="result-title">Points:</span>
+          <span class="result"> ${stats.points}</span>
+        </div>
+      </div>
+    ` : ''}
+    <button class="button">Play again</button>
+  </div>
+`;
+    return modal;
+  }
 
   #onStartObserver;
 
