@@ -121,6 +121,11 @@ export class Game {
     return new Map(this.#score);
   }
 
+  #gameResult;
+  getGameResult() {
+    return this.#gameResult;
+  }
+
   #startTime = null;
 
   #gameTimerId;
@@ -207,9 +212,9 @@ export class Game {
 
       if (this.getCatcherScore(catcherId) >= this.#settings.pointsToWin.getPoints()) {
         this.#win(catcherId);
-        this.#notify();
-
         this.stop();
+
+        this.#notify();
       }
     }
 
@@ -247,11 +252,25 @@ export class Game {
   }
 
   #win(catcherId) {
-    return catcherId;
+    const result = {
+      outcome: 'win',
+      winnerId: catcherId,
+      stats: this.#score.get(catcherId)
+    };
+    this.#gameResult = result;
+    this.#notify();
+    return result;
   }
 
   #lose() {
-    return 'Glitch wins';
+    const result = {
+      outcome: 'lose',
+      winnerId: null,
+      stats: null
+    };
+    this.#gameResult = result;
+    this.#notify();
+    return result;
   }
 
 
