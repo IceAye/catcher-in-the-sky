@@ -6,6 +6,7 @@
 /* Page //======================================================================================================================================================== */
 
 .container {
+    position: relative;
     margin: 0 auto;
     max-width: 1280px;
     padding: 0 15px;
@@ -21,13 +22,12 @@
     display: flex;
     gap: 12px;
     padding-top: 24px;
-    /*flex-wrap: wrap;*/
 }
 
 .line {
     display: flex;
     flex-direction: column;
-    flex: 0 1 350px;
+    flex: 0 1 250px;
 }
 
 label {
@@ -166,7 +166,9 @@ input {
 
 .modal {
     margin: 0 auto;
-    position: relative;
+    position: absolute;
+    top: 15%;
+    left: 40%;
     max-width: 280px;
     max-height: 550px;
 }
