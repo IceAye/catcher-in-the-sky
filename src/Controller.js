@@ -1,6 +1,7 @@
 import { SkySize } from './config/sky-size.js';
 import { GlitchSpeedJump } from './config/glitch-speed-jump.js';
 import { GAME_STATUSES } from './shared/constants.js';
+import { minutesToMs , msToMinutes , msToSeconds } from './shared/utils/time.js';
 
 export class Controller {
 
@@ -19,19 +20,34 @@ export class Controller {
       this.#start();
       this.#startGameTimer();
     };
-    this.#view.onCatcherOneMove = ({ direction }) => {
-      this.#model.moveCatcher(1 , direction);
-    };
-    this.#view.onCatcherTwoMove = ({ direction }) => {
-      this.#model.moveCatcher(2 , direction);
-    };
+    this.#view.onCatcherOneMove = this.#handleCatcherMove(1);
+    this.#view.onCatcherTwoMove = this.#handleCatcherMove(2);
     this.#model.subscribe(() => {
       this.#renderCurrentState();
+      this.#handleModelUpdate()
     });
   }
 
+  #handleCatcherMove(id) {
+    return ({ direction }) => {
+     this.#model.moveCatcher(id , direction);
+    };
+  }
+
+  #handleModelUpdate() {
+    const result = this.#model.getGameResult?.();
+
+    if (result) {
+      this.#view.showModal(result.outcome, result.winnerId, result.stats);
+    }
+  }
+
   #applySettings(settingsToModel) {
-    this.#model.settings = settingsToModel;
+    const settingsToApply = {
+      ...settingsToModel ,
+      gameTime: minutesToMs(settingsToModel.gameTime)
+    };
+    this.#model.settings = settingsToApply;
   }
 
   #start() {
@@ -46,7 +62,7 @@ export class Controller {
 
   #renderCurrentState() {
     let isSettingsActive = true;
-    if (this.#model.status === GAME_STATUSES.IN_PROGRESS) {
+    if (this.#model.status !== GAME_STATUSES.PENDING) {
       isSettingsActive = false;
     }
     this.#view.render(this.#mapModelToDTO() ,
@@ -67,10 +83,10 @@ export class Controller {
   #mapSettingsToDTO(isSettingsActive) {
     return {
       skySize: {
-        ...this.#model.settings.skySize,
+        ...this.#model.settings.skySize ,
         presets: SkySize.presets
       } ,
-      gameTime: this.#model.settings.gameTime ,
+      gameTime: msToMinutes(this.#model.settings.gameTime) ,
       pointsToWin: {
         mode: this.#model.settings.pointsToWin.mode ,
         total: this.#model.settings.pointsToWin.total ,
@@ -79,7 +95,7 @@ export class Controller {
       glitchSpeedJump: {
         levels: GlitchSpeedJump.levels
       } ,
-      soundEnabled: this.#model.settings.soundEnabled,
+      soundEnabled: this.#model.settings.soundEnabled ,
       isSettingsActive
     };
   }
@@ -87,8 +103,8 @@ export class Controller {
   #deriveTimeParts() {
     const ms = this.#model.remainingTimeMs;
     return {
-      minutes: Math.floor(ms / 60000) ,
-      seconds: Math.floor((ms % 60000) / 1000)
+      minutes: msToMinutes(ms) ,
+      seconds: msToSeconds(ms)
     };
   }
 
