@@ -1,7 +1,7 @@
 import { SkySize } from './config/sky-size.js';
 import { GlitchSpeedJump } from './config/glitch-speed-jump.js';
 import { GAME_STATUSES } from './shared/constants.js';
-import { minutesToMs , msToMinutes , msToSeconds } from './shared/utils/time.js';
+import { msToMinutes , msToSeconds } from './shared/utils/time.js';
 
 export class Controller {
 
@@ -26,6 +26,14 @@ export class Controller {
       this.#renderCurrentState();
       this.#handleModelUpdate()
     });
+    this.#view.onRestart = () => {
+      this.#model.restart();
+      this.#view.hideModal();
+    }
+    this.#view.onToggleSound = () => {
+      this.#model.toggleSoundSetting();
+      this.#view.updateSoundButton(this.#model.settings.soundEnabled);
+    }
   }
 
   #handleCatcherMove(id) {
@@ -45,9 +53,9 @@ export class Controller {
   #applySettings(settingsToModel) {
     const settingsToApply = {
       ...settingsToModel ,
-      gameTime: minutesToMs(settingsToModel.gameTime)
+      soundEnabled: this.#model.settings.soundEnabled
     };
-    this.#model.settings = settingsToApply;
+    this.#model.applySettings(settingsToApply);
   }
 
   #start() {
@@ -82,6 +90,7 @@ export class Controller {
 
   #mapSettingsToDTO(isSettingsActive) {
     return {
+      ...this.#model.settings,
       skySize: {
         ...this.#model.settings.skySize ,
         presets: SkySize.presets
@@ -112,8 +121,8 @@ export class Controller {
     const scoreMap = this.#model.getScore();
     const result = {};
 
-    for (const [id , { points , glitchStrike }] of scoreMap.entries()) {
-      result[id] = { points , glitchStrike };
+    for (const [id , { points , currentStrike }] of scoreMap.entries()) {
+      result[id] = { points , currentStrike};
     }
 
     return result;

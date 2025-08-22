@@ -41,6 +41,8 @@ export class View {
 
   #settingsDraft;
 
+  #soundButton = null;
+
 
   render(gameDTO , settingsDTO) {
     this.#root.innerHTML = '';
@@ -56,97 +58,24 @@ export class View {
       this.#renderGameScreen(gameDTO , settingsDTO);
     }
   }
+  #onRestartObserver;
+  #onToggleSoundObserver;
+
+  set onRestart(observer) {
+    this.#onRestartObserver = observer;
+  }
+
+  set onToggleSound(observer) {
+    this.#onToggleSoundObserver = observer;
+  }
 
   #renderStartScreen() {
     const startScreen = document.createElement('div');
     startScreen.classList.add('main-elements');
 
-    startScreen.appendChild(this.#renderButton());
+    startScreen.appendChild(this.#renderStartButton());
 
     this.#root.appendChild(startScreen);
-  }
-
-  #renderSettingsBoard(settingsDTO) {
-    const { skySize , gameTime , pointsToWin , glitchSpeedJump , isSettingsActive , soundEnabled } = settingsDTO;
-
-    const settingsBoard = document.createElement('div');
-    settingsBoard.classList.add('top-items');
-
-    settingsBoard.append(
-      this.#renderConfigLine('Points to win' , pointsToWin.presets || pointsToWin.total , 'pointsToWin' ,
-                             isSettingsActive));
-    settingsBoard.append(this.#renderConfigLine('Sky size' , skySize.presets , 'skySize' , isSettingsActive));
-    settingsBoard.append(
-      this.#renderConfigLine('Glitch\'s jump speed' , glitchSpeedJump.levels , 'glitchSpeedJump' , isSettingsActive));
-    settingsBoard.append(this.#renderConfigLine('Game time' , gameTime , 'gameTime' , isSettingsActive));
-    settingsBoard.append(this.#renderSoundBar(soundEnabled));
-
-    this.#root.appendChild(settingsBoard);
-  }
-
-  #renderConfigLine(labelText , options , id , isActive) {
-    const configLine = document.createElement('div');
-    configLine.classList.add('line');
-
-    const labelEl = document.createElement('label');
-    labelEl.htmlFor = id;
-    labelEl.textContent = `${labelText}:`;
-
-    const slot = document.createElement('div');
-    slot.classList.add('slot');
-
-    const element = typeof options === 'object'
-                    ? slot.appendChild(this.#renderSelect(id , options))
-                    : slot.appendChild(this.#appendCustomInput(id , options));
-
-    if (!isActive) {
-      element.disabled = true;
-      element.classList.add('disabled');
-      labelEl.classList.add('disabled');
-    }
-
-    slot.appendChild(element);
-    configLine.append(labelEl , slot);
-
-    return configLine;
-  }
-
-  #renderSelect(id , options) {
-    const selectEl = document.createElement('select');
-    selectEl.id = id;
-    selectEl.classList.add('slot');
-    selectEl.name = 'select';
-
-    this.#renderOptions(selectEl , options);
-
-    selectEl.addEventListener('change' , (event) => {
-      if (event.target.tagName === 'SELECT') {
-        const selectedValue = event.target.value;
-
-        if (selectedValue === 'custom') {
-          const slot = selectEl.parentElement;
-
-          slot.innerHTML = '';
-          const input = this.#appendCustomInput(id);
-          slot.appendChild(input);
-          input.focus();
-        } else {
-          this.#updateSingleSetting(id , selectedValue);
-        }
-      }
-    });
-
-    return selectEl;
-  }
-
-  #renderOptions(selectEl , options) {
-    // todo: change value for selected if presets ? onStart -> fill with settings
-    if (typeof options === 'object' && options !== null) {
-      const rows = Object.keys(options);
-      for (const row of rows) {
-        this.#appendSingleOption(selectEl , row);
-      }
-    }
   }
 
   #appendSingleOption(selectEl , value) {
@@ -156,32 +85,22 @@ export class View {
     selectEl.append(optionEl);
   }
 
-  #appendCustomInput(id , value) {
-    const inputEl = document.createElement('input');
-    inputEl.classList.add('slot');
-    inputEl.type = 'number';
-    inputEl.value = '';
-    inputEl.placeholder = value ?? 'Enter the value';
+  #renderSettingsBoard(settingsDTO) {
+    const { skySize , gameTime , pointsToWin , glitchSpeedJump , isSettingsActive , soundEnabled } = settingsDTO;
 
-    inputEl.addEventListener('focus' , (event) => {
-      if (inputEl.value === '0') {
-        inputEl.value = '';
-      }
-    });
+    const settingsBoard = document.createElement('div');
+    settingsBoard.classList.add('top-items');
 
-    inputEl.addEventListener('change' , (event) => {
-      // todo: transfer type change to SettingsDraftBuilder
-      const inputValue = Number(event.currentTarget.value);
+    settingsBoard.append(
+      this.#renderConfigLine('Points to win' , pointsToWin.presets|| pointsToWin.total  , 'pointsToWin' ,
+                             isSettingsActive));
+    settingsBoard.append(this.#renderConfigLine('Sky size' , skySize.presets , 'skySize' , isSettingsActive));
+    settingsBoard.append(
+      this.#renderConfigLine('Glitch\'s jump speed' , glitchSpeedJump.levels , 'glitchSpeedJump' , isSettingsActive));
+    settingsBoard.append(this.#renderConfigLine('Game time' , gameTime , 'gameTime' , isSettingsActive));
+    settingsBoard.append(this.#renderSoundBar(soundEnabled));
 
-      if (id === 'pointsToWin') {
-        this.#updateSingleSetting(id , 'custom' , inputValue);
-      } else {
-        this.#updateSingleSetting(id , inputValue);
-      }
-
-    });
-
-    return inputEl;
+    this.#root.appendChild(settingsBoard);
   }
 
   #updateSingleSetting(id , selectedOption , customInput) {
@@ -216,16 +135,33 @@ export class View {
     }
   }
 
-  #renderButton() {
-    const button = document.createElement('button');
-    button.classList.add('button' , 'main-button');
-    button.append('Start game');
-    button.addEventListener('click' , () => {
-      this.#settingsDraft ??= {};
-      this.#onStartObserver?.(this.#settingsDraft);
-    });
+  #renderConfigLine(labelText , options, id , isActive) {
+    const configLine = document.createElement('div');
+    configLine.classList.add('line');
 
-    return button;
+    const labelEl = document.createElement('label');
+    labelEl.htmlFor = id;
+    labelEl.textContent = `${labelText}:`;
+
+    const slot = document.createElement('div');
+    slot.classList.add('slot');
+
+
+      const element = typeof options === 'object'
+                      ? slot.appendChild(this.#renderSelect(id , options))
+                      : slot.appendChild(this.#appendCustomInput(id , options));
+
+
+    if (!isActive) {
+      element.disabled = true;
+      element.classList.add('disabled');
+      labelEl.classList.add('disabled');
+    }
+
+    slot.appendChild(element);
+    configLine.append(labelEl , slot);
+
+    return configLine;
   }
 
   #renderGameScreen(gameDTO , settingsDTO) {
@@ -274,34 +210,42 @@ export class View {
     return this.#skyGridContainer;
   }
 
-  #renderSoundBar(soundEnabled) {
-    const toggler = document.createElement('div');
-    toggler.classList.add('switch-button');
+  #renderSelect(id ,  options) {
+    const selectEl = document.createElement('select');
+    selectEl.id = id;
+    selectEl.classList.add('slot');
+    selectEl.name = 'select';
 
-    const togglerLabel = document.createElement('label');
-    togglerLabel.textContent = 'Sound on';
+    this.#renderOptions(selectEl , options);
 
-    const togglerButton = document.createElement('button');
-    togglerButton.classList.add('toggle');
+    selectEl.addEventListener('change' , (event) => {
+      if (event.target.tagName === 'SELECT') {
+        const selectedValue = event.target.value;
 
-    const spanEl = document.createElement('span');
-    spanEl.classList.add('icon-slider');
-    togglerButton.appendChild(spanEl);
+        if (selectedValue === 'custom') {
+          const slot = selectEl.parentElement;
 
-    togglerButton.addEventListener('click' , (soundEnabled) => {
-                                     this.toggleSound(soundEnabled);
-                                   }
-    );
+          slot.innerHTML = '';
+          const input = this.#appendCustomInput(id);
+          slot.appendChild(input);
+          input.focus();
+        } else {
+          this.#updateSingleSetting(id , selectedValue);
+        }
+      }
+    });
 
-    toggler.append(togglerLabel , togglerButton);
-
-    return toggler;
+    return selectEl;
   }
 
-  // todo: connect with Model
-  toggleSound(soundEnabled) {
-    let toggleButton = document.querySelector('.toggle');
-    toggleButton.classList.toggle('on');
+  #renderOptions(selectEl , options) {
+    // todo: change value for selected if presets ? onStart -> fill with settings
+    if (typeof options === 'object' && options !== null) {
+      const rows = Object.keys( options);
+      for (const row of rows) {
+        this.#appendSingleOption(selectEl , row);
+      }
+    }
   }
 
   #renderScoreBoard(gameDTO , settingsDTO) {
@@ -363,6 +307,105 @@ export class View {
     this.#root.appendChild(modal);
   }
 
+  #appendCustomInput(id ,  value) {
+    const inputEl = document.createElement('input');
+    inputEl.id = id;
+    inputEl.classList.add('slot');
+    inputEl.type = 'number';
+    inputEl.value = '';
+    inputEl.placeholder = value ?? 'Enter the value';
+
+    inputEl.addEventListener('focus' , (event) => {
+      if (inputEl.value === '0') {
+        inputEl.value = '';
+      }
+    });
+
+    inputEl.addEventListener('change' , (event) => {
+      // todo: transfer type change to SettingsDraftBuilder
+      const inputValue = event.currentTarget.valueAsNumber;
+      if (id === 'pointsToWin') {
+
+        this.#updateSingleSetting(id , 'custom' , inputValue);
+      } else {
+        this.#updateSingleSetting(id , inputValue);
+      }
+
+    });
+
+    return inputEl;
+  }
+
+  #renderStartButton() {
+    const button = document.createElement('button');
+    button.classList.add('button' , 'main-button');
+    button.textContent = 'Start game';
+    button.addEventListener('click' , () => {
+      this.#settingsDraft ??= {};
+      this.#onStartObserver?.(this.#settingsDraft);
+    });
+
+    return button;
+  }
+
+  #onStartObserver;
+
+  set onstart(observer) {
+    this.#onStartObserver = observer;
+  }
+
+  #onCatcherOneMoveObserver;
+
+  set onCatcherOneMove(observer) {
+    this.#onCatcherOneMoveObserver = observer;
+  }
+
+  #onCatcherTwoMoveObserver;
+
+  set onCatcherTwoMove(observer) {
+    this.#onCatcherTwoMoveObserver = observer;
+  }
+
+  #renderSoundBar(soundEnabled) {
+    if (this.#soundButton) {
+      return this.#soundButton.parentElement;
+    }
+
+    const toggler = document.createElement('div');
+    toggler.classList.add('switch-button');
+
+    const togglerLabel = document.createElement('label');
+    togglerLabel.textContent = 'Sound on';
+
+    this.#soundButton = document.createElement('button');
+    this.#soundButton.classList.add('toggle');
+
+    const spanEl = document.createElement('span');
+    spanEl.classList.add('icon-slider');
+    this.#soundButton.appendChild(spanEl);
+
+    this.updateSoundButton(soundEnabled);
+
+    this.#soundButton.addEventListener('click' , () => {
+                                         this.#onToggleSoundObserver?.();
+                                       }
+    );
+
+    toggler.append(togglerLabel , this.#soundButton);
+
+    return toggler;
+  }
+
+  updateSoundButton(soundEnabled) {
+    if (!this.#soundButton) return;
+    this.#soundButton.classList.toggle('on' , soundEnabled);
+  }
+
+  hideModal() {
+    const modal = this.#root.querySelector('.modal');
+    // todo: refactor null
+    this.#root.removeChild(modal);
+  }
 
   #renderModal(outcome , winnerId , stats) {
     const modal = document.createElement('div');
@@ -392,25 +435,13 @@ export class View {
     <button class="button">Play again</button>
   </div>
 `;
+
+    const buttonEl = modal.querySelector('button');
+    buttonEl.addEventListener('click' , () => {
+      this.#onRestartObserver?.();
+    });
+
     return modal;
-  }
-
-  #onStartObserver;
-
-  set onstart(observer) {
-    this.#onStartObserver = observer;
-  }
-
-  #onCatcherOneMoveObserver;
-
-  set onCatcherOneMove(observer) {
-    this.#onCatcherOneMoveObserver = observer;
-  }
-
-  #onCatcherTwoMoveObserver;
-
-  set onCatcherTwoMove(observer) {
-    this.#onCatcherTwoMoveObserver = observer;
   }
 
 }
