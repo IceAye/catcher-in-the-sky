@@ -65,7 +65,6 @@ export class Game {
 
   get settings() {
     return {
-      ...this.#settings ,
       skySize: {
         ...this.#settings.skySize
       } ,
@@ -82,46 +81,43 @@ export class Game {
     };
   }
 
-  set settings(settings) {
-    if (settings.skySize &&
-      settings.skySize.rowsCount * settings.skySize.columnsCount < 4) {
-      throw new RangeError('The size of the sky should be bigger');
-    }
-
-    const skySize = settings.skySize
-                    ? { ...settings.skySize }
-                    : this.#settings.skySize;
-
-    const glitchSpeedJump = settings.glitchSpeedJump
-                            ? new GlitchSpeedJump(settings.glitchSpeedJump.level)
-                            : this.#settings.glitchSpeedJump;
-
-    const gameTime = settings.gameTime ? settings.gameTime : this.#settings.gameTime;
-
-    const points = settings.pointsToWin ? { ...settings.pointsToWin } : this.#settings.pointsToWin;
-    const mode = points?.mode ?? 'duel';
-    const customPoints = points?.customPoints ?? null;
-
-
-    const pointsToWin = new PointsToWin({ mode, customPoints }) ?? this.#settings.pointsToWin
-
-    this.#settings = {
-      ...this.#settings ,
-      skySize ,
-      glitchSpeedJump ,
-      gameTime ,
-      pointsToWin,
-    };
-
-    this.#notify();
-  }
+  #gameResult = null;
 
   #score = new Map();
   getScore() {
     return new Map(this.#score);
   }
 
-  #gameResult;
+  set settings(settings) {
+    if (settings.skySize &&
+      settings.skySize.rowsCount * settings.skySize.columnsCount < 4) {
+      throw new RangeError('The size of the sky should be bigger');
+    }
+
+    if (settings.skySize) {
+      this.#settings.skySize = { ...settings.skySize };
+    }
+
+    if (settings.glitchSpeedJump) {
+      this.#settings.glitchSpeedJump = new GlitchSpeedJump(settings.glitchSpeedJump.level);
+    }
+
+    if (settings.gameTime) {
+      this.#settings.gameTime = settings.gameTime;
+    }
+
+    if (settings.pointsToWin) {
+      const mode = settings.pointsToWin.mode ?? 'duel';
+      const customPoints = settings.pointsToWin.customPoints ?? null;
+      this.#settings.pointsToWin = new PointsToWin({ mode, customPoints });
+    }
+
+    if ('soundEnabled' in settings) {
+      this.#settings.soundEnabled = settings.soundEnabled;
+    }
+
+    this.#notify();
+  }
   getGameResult() {
     return this.#gameResult;
   }
@@ -150,8 +146,9 @@ export class Game {
   }
 
   stop() {
-    this.#cleanup();
     this.#status = GAME_STATUSES.COMPLETED;
+    clearInterval(this.#glitchSetIntervalId);
+    clearInterval(this.#gameTimerId);
     this.#notify();
   }
 
@@ -163,9 +160,15 @@ export class Game {
 
   #cleanup() {
     this.#startTime = null;
-    clearInterval(this.#glitchSetIntervalId);
-    clearInterval(this.#gameTimerId);
+    this.#gameResult = null;
+    this.#notify();
   }
+
+  applySettings(settings) {
+    this.#settings.apply(settings);
+    this.#notify();
+  }
+
 
   moveCatcher(catcherId , direction) {
     const catcher = this.#catchers.get(catcherId);
@@ -234,8 +237,9 @@ export class Game {
     return (Date.now() - this.#startTime) > this.#settings.gameTime;
   }
 
-  toggleSound() {
+  toggleSoundSetting() {
     this.#settings.toggleSound();
+    this.#notify();
   }
 
   subscribe(newSubscriber) {
@@ -309,7 +313,7 @@ export class Game {
     this.#score = new Map();
 
     for (const [id] of this.#catchers) {
-      this.#score.set(id, { points: 0, glitchStrike: 0 });
+      this.#score.set(id, { points: 0, currentStrike: 0 });
     }
   }
 
@@ -334,7 +338,7 @@ export class Game {
   }
 
   #updateScore(catcherId , delta) {
-    const currentScore = this.#score.get(catcherId) ?? { points: 0 , glitchStrike: 0 };
+    const currentScore = this.#score.get(catcherId) ?? { points: 0 , currentStrike: 0 };
     const updatedScore = {
       ...currentScore ,
       points: currentScore.points + delta
@@ -344,13 +348,13 @@ export class Game {
   }
 
   #updateGlitchStrike(catcherId , wasGlitchCaught) {
-    const currentScore = this.#score.get(catcherId) ?? { points: 0 , glitchStrike: 0 };
+    const currentScore = this.#score.get(catcherId) ?? { points: 0 , currentStrike: 0 };
 
     const updatedScore = {
       points: currentScore.points ,
-      glitchStrike: wasGlitchCaught
-                    ? currentScore.glitchStrike + 1
-                    : currentScore.glitchStrike - 1
+      currentStrike: wasGlitchCaught
+                    ? currentScore.currentStrike + 1
+                    : currentScore.currentStrike - 1
     };
 
     this.#applyGlitchStrikeEffects(updatedScore);
@@ -360,14 +364,14 @@ export class Game {
   }
 
   #applyGlitchStrikeEffects(score) {
-    if (score.glitchStrike === SCORE_RULES.GLITCH_FAST_CATCH_THRESHOLD) {
+    if (score.currentStrike === SCORE_RULES.GLITCH_FAST_CATCH_THRESHOLD) {
       score.points += SCORE_RULES.GLITCH_FAST_CATCH_BONUS;
-      score.glitchStrike = 1;
+      score.currentStrike = 1;
     }
 
-    if (score.glitchStrike === SCORE_RULES.GLITCH_MISS_THRESHOLD) {
+    if (score.currentStrike === SCORE_RULES.GLITCH_MISS_THRESHOLD) {
       score.points -= SCORE_RULES.GLITCH_MISS_PENALTY;
-      score.glitchStrike = 0;
+      score.currentStrike = 0;
     }
   }
 
@@ -397,7 +401,7 @@ export class Game {
    */
 
   __forceScore(catcherId , score , strike = 0) {
-    this.#score.set(catcherId , { points: score , glitchStrike: strike });
+    this.#score.set(catcherId , { points: score , currentStrike: strike });
   }
 
   __forceStartTime(ms) {
