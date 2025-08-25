@@ -1,8 +1,8 @@
-import { SkySize } from '../config/sky-size.js';
-import { GlitchSpeedJump } from '../config/glitch-speed-jump.js';
-import { PointsToWin } from '../config/points-to-win.js';
-import { DEFAULT_GAME_TIME_2MIN } from './constants.js';
-import { minutesToMs } from './utils/time.js';
+import { SkySize } from '../../config/sky-size.js';
+import { GlitchSpeedJump } from '../../config/glitch-speed-jump.js';
+import { PointsToWin } from '../../config/points-to-win.js';
+import { DEFAULT_GAME_TIME_2MIN } from '../constants.js';
+import { minutesToMs } from '../utils/time.js';
 
 export class Settings {
   constructor({ skySize = {} , level , gameTime = DEFAULT_GAME_TIME_2MIN , points = {} } = {}) {
@@ -12,7 +12,7 @@ export class Settings {
     this.pointsToWin = new PointsToWin(points);
   }
 
-  soundEnabled = false;
+  soundEnabled = true;
 
   toggleSound() {
     this.soundEnabled = !this.soundEnabled;
@@ -28,7 +28,7 @@ export class Settings {
 
   apply(settings) {
     if ('skySize' in settings && settings.skySize !== undefined) {
-      this.skySize = { ...settings.skySize };
+      this.skySize = new SkySize(settings.skySize);
     }
 
     if ('glitchSpeedJump' in settings && settings.glitchSpeedJump !== undefined) {
