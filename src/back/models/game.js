@@ -1,5 +1,5 @@
 import { GAME_STATUSES , MOVE_DIRECTIONS , SCORE_RULES } from '../../shared/constants.js';
-import { Settings } from '../../shared/settings.js';
+import { Settings } from '../../shared/settingsModule/settings.js';
 import { Catcher } from './catcher.js';
 import { Glitch } from './glitch.js';
 import { GlitchSpeedJump } from '../../config/glitch-speed-jump.js';
@@ -76,7 +76,6 @@ export class Game {
       pointsToWin: {
         mode: this.#settings.pointsToWin.mode,
         total: this.#settings.pointsToWin.getPoints(),
-        presets: this.#settings.pointsPresets,
       }
     };
   }

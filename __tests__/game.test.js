@@ -1,7 +1,7 @@
 import { NumberUtility } from '../src/shared/utils/number-utility.js';
 import { Game } from '../src/back/models/game.js';
 import { GAME_STATUSES , MOVE_DIRECTIONS } from '../src/shared/constants.js';
-import { Settings } from '../src/shared/settings.js';
+import { Settings } from '../src/shared/settingsModule/settings.js';
 import { SkySize } from '../src/config/sky-size.js';
 import { Position } from '../src/config/position.js';
 import { MockNumberUtility } from './utils/mock-number-utility.js';
@@ -100,8 +100,8 @@ describe('game' , () => {
     expect(x2 !== x3 || y2 !== y3).toBe(true);
   });
 
-  it('Sky size settings should be set' , () => {
-    // default settings
+  it('Sky size settingsModule should be set' , () => {
+    // default settingsModule
     expect(game.settings).toEqual({
                                     skySize: {
                                       columnsCount: 4 ,
@@ -140,7 +140,7 @@ describe('game' , () => {
   });
 
 
-  it('settings should be set partially' , () => {
+  it('settingsModule should be set partially' , () => {
     game.settings = {
       glitchSpeedJump: {
         level: 'amateur' ,
