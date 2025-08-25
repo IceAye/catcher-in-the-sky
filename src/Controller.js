@@ -1,7 +1,6 @@
-import { SkySize } from './config/sky-size.js';
-import { GlitchSpeedJump } from './config/glitch-speed-jump.js';
 import { GAME_STATUSES } from './shared/constants.js';
 import { msToMinutes , msToSeconds } from './shared/utils/time.js';
+import { settingsConfig } from './shared/settingsModule/settingsConfig.js';
 
 export class Controller {
 
@@ -51,11 +50,15 @@ export class Controller {
   }
 
   #applySettings(settingsToModel) {
-    const settingsToApply = {
-      ...settingsToModel ,
-      soundEnabled: this.#model.settings.soundEnabled
-    };
-    this.#model.applySettings(settingsToApply);
+    const settingsToApply = { soundEnabled: this.#model.settings.soundEnabled};
+
+    for (const [key, setting] of Object.entries(settingsToModel)) {
+      if (key !== 'isSettingsActive' && key !== 'soundEnabled') {
+        settingsToApply[key] = setting.value;
+      }
+    }
+
+    this.#model.applySettings( settingsToApply);
   }
 
   #start() {
@@ -89,24 +92,16 @@ export class Controller {
   }
 
   #mapSettingsToDTO(isSettingsActive) {
-    return {
-      ...this.#model.settings,
-      skySize: {
-        ...this.#model.settings.skySize ,
-        presets: SkySize.presets
-      } ,
-      gameTime: msToMinutes(this.#model.settings.gameTime) ,
-      pointsToWin: {
-        mode: this.#model.settings.pointsToWin.mode ,
-        total: this.#model.settings.pointsToWin.total ,
-        presets: this.#model.settings.pointsToWin.presets
-      } ,
-      glitchSpeedJump: {
-        levels: GlitchSpeedJump.levels
-      } ,
-      soundEnabled: this.#model.settings.soundEnabled ,
-      isSettingsActive
-    };
+    const dto = { isSettingsActive };
+
+    for (const key in settingsConfig) {
+      dto[key] = {
+        ...settingsConfig[key],
+        value: key === 'gameTime' ? msToMinutes(this.#model.settings.gameTime) : this.#model.settings[key]
+      }
+    }
+
+    return  dto;
   }
 
   #deriveTimeParts() {
