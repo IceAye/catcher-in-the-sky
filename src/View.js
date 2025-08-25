@@ -44,30 +44,9 @@ export class View {
   #soundButton = null;
 
 
-  render(gameDTO , settingsDTO) {
-    this.#root.innerHTML = '';
-    this.#root.classList.add('container');
-
-    this.#root.append(gameDTO.status);
-
-    this.#renderSettingsBoard(settingsDTO);
-
-    if (gameDTO.status === GAME_STATUSES.PENDING) {
-      this.#renderStartScreen(settingsDTO);
-    } else if (gameDTO.status === GAME_STATUSES.IN_PROGRESS) {
-      this.#renderGameScreen(gameDTO , settingsDTO);
-    }
-  }
-  #onRestartObserver;
-  #onToggleSoundObserver;
-
-  set onRestart(observer) {
-    this.#onRestartObserver = observer;
-  }
-
-  set onToggleSound(observer) {
-    this.#onToggleSoundObserver = observer;
-  }
+  #onStartObserver;
+  #onCatcherOneMoveObserver;
+  #onCatcherTwoMoveObserver;
 
   #renderStartScreen() {
     const startScreen = document.createElement('div');
@@ -77,175 +56,60 @@ export class View {
 
     this.#root.appendChild(startScreen);
   }
+  #onRestartObserver;
+  #onToggleSoundObserver;
 
-  #appendSingleOption(selectEl , value) {
-    const optionEl = document.createElement('option');
-    optionEl.value = String(value);
-    optionEl.textContent = String(value);
-    selectEl.append(optionEl);
+  set onstart(observer) {
+    this.#onStartObserver = observer;
   }
 
-  #renderSettingsBoard(settingsDTO) {
-    const { skySize , gameTime , pointsToWin , glitchSpeedJump , isSettingsActive , soundEnabled } = settingsDTO;
-
-    const settingsBoard = document.createElement('div');
-    settingsBoard.classList.add('top-items');
-
-    settingsBoard.append(
-      this.#renderConfigLine('Points to win' , pointsToWin.presets|| pointsToWin.total  , 'pointsToWin' ,
-                             isSettingsActive));
-    settingsBoard.append(this.#renderConfigLine('Sky size' , skySize.presets , 'skySize' , isSettingsActive));
-    settingsBoard.append(
-      this.#renderConfigLine('Glitch\'s jump speed' , glitchSpeedJump.levels , 'glitchSpeedJump' , isSettingsActive));
-    settingsBoard.append(this.#renderConfigLine('Game time' , gameTime , 'gameTime' , isSettingsActive));
-    settingsBoard.append(this.#renderSoundBar(soundEnabled));
-
-    this.#root.appendChild(settingsBoard);
+  set onCatcherOneMove(observer) {
+    this.#onCatcherOneMoveObserver = observer;
   }
 
-  #updateSingleSetting(id , selectedOption , customInput) {
-    if (id === 'pointsToWin') {
-      if (selectedOption === 'custom') {
-        this.#settingsDraft = { ...this.#settingsDraft , [id]: { mode: selectedOption , customPoints: customInput } };
-      } else {
-        this.#settingsDraft = {
-          ...this.#settingsDraft ,
-          [id]: { mode: selectedOption }
-        };
-      }
+  set onCatcherTwoMove(observer) {
+    this.#onCatcherTwoMoveObserver = observer;
+  }
+
+  set onRestart(observer) {
+    this.#onRestartObserver = observer;
+  }
+
+  set onToggleSound(observer) {
+    this.#onToggleSoundObserver = observer;
+  }
+
+  render(gameDTO , settingsDTO) {
+    this.#root.innerHTML = '';
+    this.#root.classList.add('container');
+
+    this.#root.append(gameDTO.status);
+
+    if (settingsDTO.isSettingsActive && !this.#settingsDraft) {
+      this.#settingsDraft = structuredClone(settingsDTO);
     }
-    if (id === 'skySize') {
-      const sizeNumber = Number(selectedOption[0]);
-      this.#settingsDraft = {
-        ...this.#settingsDraft ,
-        [id]: { columnsCount: sizeNumber , rowsCount: sizeNumber }
-      };
-    }
-    if (id === 'glitchSpeedJump') {
-      this.#settingsDraft = {
-        ...this.#settingsDraft ,
-        [id]: { level: selectedOption }
-      };
-    }
-    if (id === 'gameTime') {
-      this.#settingsDraft = {
-        ...this.#settingsDraft ,
-        [id]: selectedOption
-      };
+
+    const settingsToRender = settingsDTO.isSettingsActive ? this.#settingsDraft : settingsDTO;
+
+    this.#renderSettingsBoard(settingsToRender);
+
+    if (gameDTO.status === GAME_STATUSES.PENDING) {
+      this.#renderStartScreen(settingsToRender);
+    } else if (gameDTO.status === GAME_STATUSES.IN_PROGRESS) {
+      this.#renderGameScreen(gameDTO , settingsToRender);
     }
   }
 
-  #renderConfigLine(labelText , options, id , isActive) {
-    const configLine = document.createElement('div');
-    configLine.classList.add('line');
+  showModal(outcome , winnerId , stats) {
+    const modal = this.#renderModal(outcome , winnerId , stats);
 
-    const labelEl = document.createElement('label');
-    labelEl.htmlFor = id;
-    labelEl.textContent = `${labelText}:`;
-
-    const slot = document.createElement('div');
-    slot.classList.add('slot');
-
-
-      const element = typeof options === 'object'
-                      ? slot.appendChild(this.#renderSelect(id , options))
-                      : slot.appendChild(this.#appendCustomInput(id , options));
-
-
-    if (!isActive) {
-      element.disabled = true;
-      element.classList.add('disabled');
-      labelEl.classList.add('disabled');
-    }
-
-    slot.appendChild(element);
-    configLine.append(labelEl , slot);
-
-    return configLine;
+    this.#root.appendChild(modal);
   }
 
-  #renderGameScreen(gameDTO , settingsDTO) {
-    const gameScreen = document.createElement('div');
-
-    gameScreen.classList.add('main-elements');
-
-    gameScreen.appendChild(this.#renderScoreBoard(gameDTO , settingsDTO));
-    gameScreen.appendChild(this.#renderSkyGrid(gameDTO , settingsDTO));
-
-    this.#root.appendChild(gameScreen);
-  }
-
-  #renderSkyGrid(gameDTO , settingsDTO) {
-    const { rowsCount , columnsCount } = settingsDTO.skySize;
-
-    this.#skyGridContainer = document.createElement('table');
-    this.#skyGridContainer.classList.add('table');
-
-    const tableBody = document.createElement('tbody');
-
-    for (let y = 0; y < rowsCount; y++) {
-      const row = document.createElement('tr');
-
-      for (let x = 0; x < columnsCount; x++) {
-        const cell = document.createElement('td');
-        cell.classList.add('cell');
-
-        if (gameDTO.glitchPosition.x === x && gameDTO.glitchPosition.y === y) {
-          cell.append('🎇');
-        }
-
-        if (gameDTO.catcherOnePosition.x === x && gameDTO.catcherOnePosition.y === y) {
-          cell.append('🏃‍♀️');
-        }
-
-        if (gameDTO.catcherTwoPosition.x === x && gameDTO.catcherTwoPosition.y === y) {
-          cell.append('🏃🏽‍♂️');
-        }
-
-        row.append(cell);
-      }
-      tableBody.appendChild(row);
-    }
-    this.#skyGridContainer.append(tableBody);
-    return this.#skyGridContainer;
-  }
-
-  #renderSelect(id ,  options) {
-    const selectEl = document.createElement('select');
-    selectEl.id = id;
-    selectEl.classList.add('slot');
-    selectEl.name = 'select';
-
-    this.#renderOptions(selectEl , options);
-
-    selectEl.addEventListener('change' , (event) => {
-      if (event.target.tagName === 'SELECT') {
-        const selectedValue = event.target.value;
-
-        if (selectedValue === 'custom') {
-          const slot = selectEl.parentElement;
-
-          slot.innerHTML = '';
-          const input = this.#appendCustomInput(id);
-          slot.appendChild(input);
-          input.focus();
-        } else {
-          this.#updateSingleSetting(id , selectedValue);
-        }
-      }
-    });
-
-    return selectEl;
-  }
-
-  #renderOptions(selectEl , options) {
-    // todo: change value for selected if presets ? onStart -> fill with settings
-    if (typeof options === 'object' && options !== null) {
-      const rows = Object.keys( options);
-      for (const row of rows) {
-        this.#appendSingleOption(selectEl , row);
-      }
-    }
+  hideModal() {
+    const modal = this.#root.querySelector('.modal');
+    // todo: refactor null
+    this.#root.removeChild(modal);
   }
 
   #renderScoreBoard(gameDTO , settingsDTO) {
@@ -291,79 +155,20 @@ export class View {
     return fragment;
   }
 
-  #renderPointsToWin(settingsDTO) {
-    const { pointsToWin } = settingsDTO;
-    return this.#renderScoreBlock('Points to win' , pointsToWin.total);
-  }
-
-  #renderFormattedTime(gameDTO) {
-    const { minutes , seconds } = gameDTO.remainingTime;
-    return this.#renderScoreBlock('Remaining time' , `${minutes}:${seconds.toString().padStart(2 , '0')}`);
-  }
-
-  showModal(outcome , winnerId , stats) {
-    const modal = this.#renderModal(outcome , winnerId , stats);
-
-    this.#root.appendChild(modal);
-  }
-
-  #appendCustomInput(id ,  value) {
-    const inputEl = document.createElement('input');
-    inputEl.id = id;
-    inputEl.classList.add('slot');
-    inputEl.type = 'number';
-    inputEl.value = '';
-    inputEl.placeholder = value ?? 'Enter the value';
-
-    inputEl.addEventListener('focus' , (event) => {
-      if (inputEl.value === '0') {
-        inputEl.value = '';
-      }
-    });
-
-    inputEl.addEventListener('change' , (event) => {
-      // todo: transfer type change to SettingsDraftBuilder
-      const inputValue = event.currentTarget.valueAsNumber;
-      if (id === 'pointsToWin') {
-
-        this.#updateSingleSetting(id , 'custom' , inputValue);
-      } else {
-        this.#updateSingleSetting(id , inputValue);
-      }
-
-    });
-
-    return inputEl;
-  }
-
   #renderStartButton() {
     const button = document.createElement('button');
     button.classList.add('button' , 'main-button');
     button.textContent = 'Start game';
     button.addEventListener('click' , () => {
-      this.#settingsDraft ??= {};
       this.#onStartObserver?.(this.#settingsDraft);
     });
 
     return button;
   }
 
-  #onStartObserver;
-
-  set onstart(observer) {
-    this.#onStartObserver = observer;
-  }
-
-  #onCatcherOneMoveObserver;
-
-  set onCatcherOneMove(observer) {
-    this.#onCatcherOneMoveObserver = observer;
-  }
-
-  #onCatcherTwoMoveObserver;
-
-  set onCatcherTwoMove(observer) {
-    this.#onCatcherTwoMoveObserver = observer;
+  #renderFormattedTime(gameDTO) {
+    const { minutes , seconds } = gameDTO.remainingTime;
+    return this.#renderScoreBlock('Remaining time' , `${minutes}:${seconds.toString().padStart(2 , '0')}`);
   }
 
   #renderSoundBar(soundEnabled) {
@@ -399,12 +204,6 @@ export class View {
   updateSoundButton(soundEnabled) {
     if (!this.#soundButton) return;
     this.#soundButton.classList.toggle('on' , soundEnabled);
-  }
-
-  hideModal() {
-    const modal = this.#root.querySelector('.modal');
-    // todo: refactor null
-    this.#root.removeChild(modal);
   }
 
   #renderModal(outcome , winnerId , stats) {
@@ -444,4 +243,250 @@ export class View {
     return modal;
   }
 
+  #renderGameScreen(gameDTO , settingsDTO) {
+    const gameScreen = document.createElement('div');
+
+    gameScreen.classList.add('main-elements');
+
+    gameScreen.appendChild(this.#renderScoreBoard(gameDTO , settingsDTO));
+    gameScreen.appendChild(this.#renderSkyGrid(gameDTO , settingsDTO));
+
+    this.#root.appendChild(gameScreen);
+  }
+
+  #renderSettingsBoard(settingsDTO) {
+    const { skySize , gameTime , pointsToWin , glitchSpeedJump , isSettingsActive , soundEnabled } = settingsDTO;
+
+    const settingsBoard = document.createElement('div');
+    settingsBoard.classList.add('top-items');
+
+    settingsBoard.append(
+      this.#renderConfigLine(pointsToWin.label , pointsToWin.type ,
+                             {
+                               options: pointsToWin.presets ,
+                               selectedKey: pointsToWin.selectedKey ,
+                               value: pointsToWin.value.customPoints
+                             } , pointsToWin.id ,
+                             isSettingsActive));
+    settingsBoard.append(this.#renderConfigLine(skySize.label , skySize.type , {
+      options: skySize.presets ,
+      selectedKey: skySize.selectedKey ,
+      value: skySize.value
+    } , skySize.id , isSettingsActive));
+    settingsBoard.append(
+      this.#renderConfigLine(glitchSpeedJump.label , glitchSpeedJump.type , {
+        options: glitchSpeedJump.presets ,
+        selectedKey: glitchSpeedJump.selectedKey ,
+        value: glitchSpeedJump.value.level
+      } , glitchSpeedJump.id , isSettingsActive));
+    settingsBoard.append(this.#renderConfigLine(gameTime.label , gameTime.type, { selectedKey: gameTime.selectedKey, value: gameTime.selectedKey }, gameTime.id ,    isSettingsActive));
+    settingsBoard.append(this.#renderSoundBar(soundEnabled));
+
+    this.#root.appendChild(settingsBoard);
+  }
+
+  #renderConfigLine(labelText , type , { options , selectedKey , value } , id , isActive) {
+    const configLine = document.createElement('div');
+    configLine.classList.add('line');
+
+    const labelEl = document.createElement('label');
+    labelEl.htmlFor = id;
+    labelEl.textContent = `${labelText}:`;
+
+    const slot = document.createElement('div');
+    slot.classList.add('slot');
+
+
+    let element;
+
+    if (!isActive) {
+      element = this.#appendCustomInput(id , selectedKey);
+      element.disabled = true;
+      element.classList.add('disabled');
+      labelEl.classList.add('disabled');
+    } else {
+      element = type === 'select' && selectedKey !== 'custom'
+                      ? slot.appendChild(this.#renderSelect(id , { options , selectedKey }))
+                      : slot.appendChild(this.#appendCustomInput(id , value));
+    }
+
+    slot.appendChild(element);
+
+    configLine.append(labelEl , slot);
+
+    return configLine;
+  }
+
+  #renderSelect(id , { options , selectedKey }) {
+    const selectEl = document.createElement('select');
+    selectEl.id = id;
+    selectEl.classList.add('slot');
+    selectEl.name = 'select';
+
+    this.#renderOptions(selectEl , { options , selectedKey });
+
+    selectEl.addEventListener('change' , (event) => {
+      if (event.target.tagName === 'SELECT') {
+        const selectedValue = event.target.value;
+
+        if (selectedValue === 'custom') {
+          const slot = selectEl.parentElement;
+
+          slot.innerHTML = '';
+          const input = this.#appendCustomInput(id);
+          slot.appendChild(input);
+          input.focus();
+        } else {
+          this.#updateSingleSetting(id , selectedValue);
+        }
+      }
+    });
+
+    return selectEl;
+  }
+
+  #renderOptions(selectEl , { options , selectedKey }) {
+    if (typeof options === 'object' && options !== null) {
+      const rows = Object.keys(options);
+      for (const row of rows) {
+        const isSelected = row === selectedKey;
+        this.#appendSingleOption(selectEl , row , isSelected);
+      }
+    }
+  }
+
+  #appendSingleOption(selectEl , selectedKey , isSelected = false) {
+    const optionEl = document.createElement('option');
+    optionEl.value = String(selectedKey);
+    optionEl.textContent = String(selectedKey);
+
+    if (isSelected) {
+      optionEl.selected = true;
+    }
+
+    selectEl.append(optionEl);
+  }
+
+  #appendCustomInput(id , value) {
+    const inputEl = document.createElement('input');
+    inputEl.id = id;
+    inputEl.classList.add('slot');
+    inputEl.type = 'number';
+    inputEl.value = value;
+    inputEl.placeholder = value ?? 'Enter the value';
+
+    inputEl.addEventListener('focus' , (event) => {
+      if (inputEl.value === '0') {
+        inputEl.value = '';
+      }
+    });
+
+    inputEl.addEventListener('change' , (event) => {
+      const inputValue = event.currentTarget.valueAsNumber;
+      if (id === 'pointsToWin') {
+        this.#updateSingleSetting(id , 'custom' , inputValue);
+      } else {
+        this.#updateSingleSetting(id , inputValue);
+      }
+    });
+
+    return inputEl;
+  }
+
+  #updateSingleSetting(id , selectedOption , customInput) {
+    if (id === 'pointsToWin') {
+      if (selectedOption === 'custom') {
+        this.#settingsDraft = {
+          ...this.#settingsDraft ,
+          [id]: {
+            ...this.#settingsDraft[id] ,
+            selectedKey: selectedOption ,
+            value: {
+              mode: selectedOption ,
+              customPoints: customInput
+            }
+          }
+        };
+      } else {
+        this.#settingsDraft = {
+          ...this.#settingsDraft ,
+          [id]: { ...this.#settingsDraft[id] , selectedKey: selectedOption , value: { mode: selectedOption } }
+        };
+      }
+    }
+    if (id === 'skySize') {
+      const sizeNumber = Number(selectedOption[0]);
+      this.#settingsDraft = {
+        ...this.#settingsDraft ,
+        [id]: {
+          ...this.#settingsDraft[id] ,
+          selectedKey: selectedOption ,
+          value: {
+            columnsCount: sizeNumber ,
+            rowsCount: sizeNumber
+          }
+        }
+      };
+    }
+    if (id === 'glitchSpeedJump') {
+      this.#settingsDraft = {
+        ...this.#settingsDraft ,
+        [id]: {
+          ...this.#settingsDraft[id] ,
+          selectedKey: selectedOption ,
+          value: {
+            level: selectedOption
+          }
+        }
+      };
+    }
+    if (id === 'gameTime') {
+      this.#settingsDraft = {
+        ...this.#settingsDraft ,
+        [id]: { ...this.#settingsDraft[id] , selectedKey: selectedOption, value: selectedOption }
+      };
+    }
+  }
+
+  #renderSkyGrid(gameDTO , settingsDTO) {
+    const { rowsCount , columnsCount } = settingsDTO.skySize.value;
+
+    this.#skyGridContainer = document.createElement('table');
+    this.#skyGridContainer.classList.add('table');
+
+    const tableBody = document.createElement('tbody');
+
+    for (let y = 0; y < rowsCount; y++) {
+      const row = document.createElement('tr');
+
+      for (let x = 0; x < columnsCount; x++) {
+        const cell = document.createElement('td');
+        cell.classList.add('cell');
+
+        if (gameDTO.glitchPosition.x === x && gameDTO.glitchPosition.y === y) {
+          cell.append('🎇');
+        }
+
+        if (gameDTO.catcherOnePosition.x === x && gameDTO.catcherOnePosition.y === y) {
+          cell.append('🏃‍♀️');
+        }
+
+        if (gameDTO.catcherTwoPosition.x === x && gameDTO.catcherTwoPosition.y === y) {
+          cell.append('🏃🏽‍♂️');
+        }
+
+        row.append(cell);
+      }
+      tableBody.appendChild(row);
+    }
+    this.#skyGridContainer.append(tableBody);
+    return this.#skyGridContainer;
+  }
+
+  #renderPointsToWin(settingsDTO) {
+    const { label, value } = settingsDTO.pointsToWin;
+    return this.#renderScoreBlock(label , value.total);
+  }
+
 }
+
