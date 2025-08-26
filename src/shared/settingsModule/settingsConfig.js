@@ -10,7 +10,7 @@ export const settingsConfig = {
       '7x7': { columnsCount: 7, rowsCount: 7 },
       '8x8': { columnsCount: 8, rowsCount: 8 }
     },
-    selectedKey: '4x4'
+    default: '4x4',
   },
 
   pointsToWin: {
@@ -23,14 +23,14 @@ export const settingsConfig = {
       marathon: 300,
       custom: null
     },
-   selectedKey: 'duel'
+    default: 'duel'
   },
 
   gameTime: {
     id: 'gameTime',
     label: 'Game time',
     type: 'input',
-    selectedKey: 2
+    default: 2
   },
 
   glitchSpeedJump: {
@@ -43,7 +43,7 @@ export const settingsConfig = {
       amateur: 800,
       pro: 400
     },
-    selectedKey: 'junior'
+    default: 'junior'
   },
 
   soundEnabled: {

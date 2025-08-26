@@ -88,6 +88,7 @@ export class View {
     if (settingsDTO.isSettingsActive && !this.#settingsDraft) {
       this.#settingsDraft = structuredClone(settingsDTO);
     }
+    console.log(this.#settingsDraft);
 
     const settingsToRender = settingsDTO.isSettingsActive ? this.#settingsDraft : settingsDTO;
 
@@ -264,22 +265,22 @@ export class View {
       this.#renderConfigLine(pointsToWin.label , pointsToWin.type ,
                              {
                                options: pointsToWin.presets ,
-                               selectedKey: pointsToWin.selectedKey ,
+                               selectedKey: this.#settingsDraft.pointsToWin.selectedKey ,
                                value: pointsToWin.value.customPoints
                              } , pointsToWin.id ,
                              isSettingsActive));
     settingsBoard.append(this.#renderConfigLine(skySize.label , skySize.type , {
       options: skySize.presets ,
-      selectedKey: skySize.selectedKey ,
+      selectedKey: this.#settingsDraft.skySize.selectedKey ,
       value: skySize.value
     } , skySize.id , isSettingsActive));
     settingsBoard.append(
       this.#renderConfigLine(glitchSpeedJump.label , glitchSpeedJump.type , {
         options: glitchSpeedJump.presets ,
-        selectedKey: glitchSpeedJump.selectedKey ,
+        selectedKey: this.#settingsDraft.glitchSpeedJump.selectedKey ,
         value: glitchSpeedJump.value.level
       } , glitchSpeedJump.id , isSettingsActive));
-    settingsBoard.append(this.#renderConfigLine(gameTime.label , gameTime.type, { selectedKey: gameTime.selectedKey, value: gameTime.selectedKey }, gameTime.id ,    isSettingsActive));
+    settingsBoard.append(this.#renderConfigLine(gameTime.label , gameTime.type, { selectedKey: this.#settingsDraft.gameTime.selectedKey, value: gameTime.value }, gameTime.id ,    isSettingsActive));
     settingsBoard.append(this.#renderSoundBar(soundEnabled));
 
     this.#root.appendChild(settingsBoard);

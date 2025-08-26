@@ -1,6 +1,7 @@
 import { GAME_STATUSES } from './shared/constants.js';
 import { msToMinutes , msToSeconds } from './shared/utils/time.js';
 import { settingsConfig } from './shared/settingsModule/settingsConfig.js';
+import { SettingsDraftBuilder } from './shared/settingsModule/settingsDraftBuilder.js';
 
 export class Controller {
 
@@ -23,21 +24,21 @@ export class Controller {
     this.#view.onCatcherTwoMove = this.#handleCatcherMove(2);
     this.#model.subscribe(() => {
       this.#renderCurrentState();
-      this.#handleModelUpdate()
+      this.#handleModelUpdate();
     });
     this.#view.onRestart = () => {
       this.#model.restart();
       this.#view.hideModal();
-    }
+    };
     this.#view.onToggleSound = () => {
       this.#model.toggleSoundSetting();
       this.#view.updateSoundButton(this.#model.settings.soundEnabled);
-    }
+    };
   }
 
   #handleCatcherMove(id) {
     return ({ direction }) => {
-     this.#model.moveCatcher(id , direction);
+      this.#model.moveCatcher(id , direction);
     };
   }
 
@@ -45,20 +46,18 @@ export class Controller {
     const result = this.#model.getGameResult?.();
 
     if (result) {
-      this.#view.showModal(result.outcome, result.winnerId, result.stats);
+      this.#view.showModal(result.outcome , result.winnerId , result.stats);
     }
   }
 
   #applySettings(settingsToModel) {
-    const settingsToApply = { soundEnabled: this.#model.settings.soundEnabled};
+    console.log('draft' , settingsToModel);
+    const settingsToApply = {
+      ...SettingsDraftBuilder.finalizeSettings(settingsToModel) ,
+      soundEnabled: this.#model.settings.soundEnabled
+    };
 
-    for (const [key, setting] of Object.entries(settingsToModel)) {
-      if (key !== 'isSettingsActive' && key !== 'soundEnabled') {
-        settingsToApply[key] = setting.value;
-      }
-    }
-
-    this.#model.applySettings( settingsToApply);
+    this.#model.applySettings(settingsToApply);
   }
 
   #start() {
@@ -92,16 +91,7 @@ export class Controller {
   }
 
   #mapSettingsToDTO(isSettingsActive) {
-    const dto = { isSettingsActive };
-
-    for (const key in settingsConfig) {
-      dto[key] = {
-        ...settingsConfig[key],
-        value: key === 'gameTime' ? msToMinutes(this.#model.settings.gameTime) : this.#model.settings[key]
-      }
-    }
-
-    return  dto;
+    return SettingsDraftBuilder.generateSettingsDTO(settingsConfig , this.#model.settings , isSettingsActive);
   }
 
   #deriveTimeParts() {
@@ -117,7 +107,7 @@ export class Controller {
     const result = {};
 
     for (const [id , { points , currentStrike }] of scoreMap.entries()) {
-      result[id] = { points , currentStrike};
+      result[id] = { points , currentStrike };
     }
 
     return result;
