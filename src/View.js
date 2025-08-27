@@ -1,4 +1,5 @@
 import { GAME_STATUSES , MOVE_DIRECTIONS } from './shared/constants.js';
+import { AudioManager } from './services/AudioManager.js';
 
 export class View {
   constructor() {
@@ -43,19 +44,9 @@ export class View {
 
   #soundButton = null;
 
-
   #onStartObserver;
   #onCatcherOneMoveObserver;
   #onCatcherTwoMoveObserver;
-
-  #renderStartScreen() {
-    const startScreen = document.createElement('div');
-    startScreen.classList.add('main-elements');
-
-    startScreen.appendChild(this.#renderStartButton());
-
-    this.#root.appendChild(startScreen);
-  }
   #onRestartObserver;
   #onToggleSoundObserver;
 
@@ -88,9 +79,13 @@ export class View {
     if (settingsDTO.isSettingsActive && !this.#settingsDraft) {
       this.#settingsDraft = structuredClone(settingsDTO);
     }
-    console.log(this.#settingsDraft);
 
-    const settingsToRender = settingsDTO.isSettingsActive ? this.#settingsDraft : settingsDTO;
+    const settingsToRender = settingsDTO.isSettingsActive
+                             ? {
+        ...this.#settingsDraft ,
+        soundEnabled: settingsDTO.soundEnabled
+      }
+                             : settingsDTO;
 
     this.#renderSettingsBoard(settingsToRender);
 
@@ -111,6 +106,30 @@ export class View {
     const modal = this.#root.querySelector('.modal');
     // todo: refactor null
     this.#root.removeChild(modal);
+  }
+
+  #renderStartScreen(settingsDTO) {
+    const { soundEnabled } = settingsDTO;
+
+    const startScreen = document.createElement('div');
+    startScreen.classList.add('main-elements');
+
+    startScreen.appendChild(this.#renderStartButton(soundEnabled));
+
+    this.#root.appendChild(startScreen);
+  }
+
+  #renderStartButton(soundEnabled) {
+
+    const button = document.createElement('button');
+    button.classList.add('button' , 'main-button');
+    button.textContent = 'Start game';
+    button.addEventListener('click' , () => {
+      this.#onStartObserver?.(this.#settingsDraft);
+      AudioManager.play('click' , soundEnabled);
+    });
+
+    return button;
   }
 
   #renderScoreBoard(gameDTO , settingsDTO) {
@@ -156,23 +175,13 @@ export class View {
     return fragment;
   }
 
-  #renderStartButton() {
-    const button = document.createElement('button');
-    button.classList.add('button' , 'main-button');
-    button.textContent = 'Start game';
-    button.addEventListener('click' , () => {
-      this.#onStartObserver?.(this.#settingsDraft);
-    });
-
-    return button;
-  }
-
   #renderFormattedTime(gameDTO) {
     const { minutes , seconds } = gameDTO.remainingTime;
     return this.#renderScoreBlock('Remaining time' , `${minutes}:${seconds.toString().padStart(2 , '0')}`);
   }
 
   #renderSoundBar(soundEnabled) {
+
     if (this.#soundButton) {
       return this.#soundButton.parentElement;
     }
@@ -181,7 +190,7 @@ export class View {
     toggler.classList.add('switch-button');
 
     const togglerLabel = document.createElement('label');
-    togglerLabel.textContent = 'Sound on';
+    togglerLabel.textContent = 'Sound';
 
     this.#soundButton = document.createElement('button');
     this.#soundButton.classList.add('toggle');
@@ -193,7 +202,7 @@ export class View {
     this.updateSoundButton(soundEnabled);
 
     this.#soundButton.addEventListener('click' , () => {
-                                         this.#onToggleSoundObserver?.();
+      this.#onToggleSoundObserver?.();
                                        }
     );
 
@@ -280,7 +289,10 @@ export class View {
         selectedKey: this.#settingsDraft.glitchSpeedJump.selectedKey ,
         value: glitchSpeedJump.value.level
       } , glitchSpeedJump.id , isSettingsActive));
-    settingsBoard.append(this.#renderConfigLine(gameTime.label , gameTime.type, { selectedKey: this.#settingsDraft.gameTime.selectedKey, value: gameTime.value }, gameTime.id ,    isSettingsActive));
+    settingsBoard.append(this.#renderConfigLine(gameTime.label , gameTime.type , {
+      selectedKey: this.#settingsDraft.gameTime.selectedKey ,
+      value: gameTime.value
+    } , gameTime.id , isSettingsActive));
     settingsBoard.append(this.#renderSoundBar(soundEnabled));
 
     this.#root.appendChild(settingsBoard);
@@ -307,8 +319,8 @@ export class View {
       labelEl.classList.add('disabled');
     } else {
       element = type === 'select' && selectedKey !== 'custom'
-                      ? slot.appendChild(this.#renderSelect(id , { options , selectedKey }))
-                      : slot.appendChild(this.#appendCustomInput(id , value));
+                ? slot.appendChild(this.#renderSelect(id , { options , selectedKey }))
+                : slot.appendChild(this.#appendCustomInput(id , value));
     }
 
     slot.appendChild(element);
@@ -444,7 +456,7 @@ export class View {
     if (id === 'gameTime') {
       this.#settingsDraft = {
         ...this.#settingsDraft ,
-        [id]: { ...this.#settingsDraft[id] , selectedKey: selectedOption, value: selectedOption }
+        [id]: { ...this.#settingsDraft[id] , selectedKey: selectedOption , value: selectedOption }
       };
     }
   }
@@ -485,7 +497,7 @@ export class View {
   }
 
   #renderPointsToWin(settingsDTO) {
-    const { label, value } = settingsDTO.pointsToWin;
+    const { label , value } = settingsDTO.pointsToWin;
     return this.#renderScoreBlock(label , value.total);
   }
 

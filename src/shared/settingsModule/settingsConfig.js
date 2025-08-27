@@ -46,11 +46,4 @@ export const settingsConfig = {
     default: 'junior'
   },
 
-  soundEnabled: {
-    id: 'soundEnabled',
-    label: 'Sound',
-    type: 'toggle',
-    default: true,
-  },
-
 };

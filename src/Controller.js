@@ -51,7 +51,6 @@ export class Controller {
   }
 
   #applySettings(settingsToModel) {
-    console.log('draft' , settingsToModel);
     const settingsToApply = {
       ...SettingsDraftBuilder.finalizeSettings(settingsToModel) ,
       soundEnabled: this.#model.settings.soundEnabled
@@ -91,7 +90,11 @@ export class Controller {
   }
 
   #mapSettingsToDTO(isSettingsActive) {
-    return SettingsDraftBuilder.generateSettingsDTO(settingsConfig , this.#model.settings , isSettingsActive);
+    const dto = {
+      ...SettingsDraftBuilder.generateSettingsDTO(settingsConfig , this.#model.settings , isSettingsActive) ,
+      soundEnabled: this.#model.settings.soundEnabled
+    };
+    return dto;
   }
 
   #deriveTimeParts() {

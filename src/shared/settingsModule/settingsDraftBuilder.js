@@ -25,7 +25,7 @@ export class SettingsDraftBuilder {
     const result = {};
 
     for (const key in draft) {
-      if (key !== 'isSettingsActive' && key !== 'soundEnabled') {
+      if (key !== 'isSettingsActive') {
         result[key] = draft[key].value;
       }
     }
