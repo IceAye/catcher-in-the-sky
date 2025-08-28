@@ -104,9 +104,10 @@ export class View {
 
   hideModal() {
     const modal = this.#root.querySelector('.modal');
-    console.log(typeof modal);
-    // todo: refactor null
-    this.#root.remove(modal);
+
+    if (modal) {
+      this.#root.removeChild(modal);
+    }
   }
 
   #renderStartScreen(settingsDTO) {
