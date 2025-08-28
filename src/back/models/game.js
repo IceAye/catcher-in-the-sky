@@ -87,6 +87,16 @@ export class Game {
     return new Map(this.#score);
   }
 
+  #wasGlitchCaught = false;
+  #wasSkyExit = false;
+  #wasCatcherCollision = false;
+
+  get wasGlitchCaught() {
+    const caught = this.#wasGlitchCaught;
+    this.#wasGlitchCaught = false;
+    return caught;
+  }
+
   set settings(settings) {
     if (settings.skySize &&
       settings.skySize.rowsCount * settings.skySize.columnsCount < 4) {
@@ -168,67 +178,20 @@ export class Game {
     this.#notify();
   }
 
-
-  moveCatcher(catcherId , direction) {
-    const catcher = this.#catchers.get(catcherId);
-    if (!catcher) throw new Error(`Catcher with id ${catcherId} not found`);
-
-    const newPosition = catcher.position.clone();
-
-    switch (direction) {
-      case MOVE_DIRECTIONS.UP:
-        newPosition.y--;
-        break;
-      case MOVE_DIRECTIONS.DOWN:
-        newPosition.y++;
-        break;
-      case MOVE_DIRECTIONS.LEFT:
-        newPosition.x--;
-        break;
-      case MOVE_DIRECTIONS.RIGHT:
-        newPosition.x++;
-        break;
-      default:
-        throw new Error('Invalid direction');
-    }
-
-    if (!this.#isInsideSky(newPosition)) {
-      this.#updateScore(catcherId , SCORE_RULES.OUT_OF_BOUNDS_PENALTY);
-      return;
-    }
-
-    if (this.#isCellBusyByOtherCatcher(newPosition , catcherId)) {
-      this.#updateScore(catcherId , SCORE_RULES.CELL_CONFLICT_PENALTY);
-      return;
-    }
-
-    catcher.position = newPosition;
-    this.#notify();
-
-
-    const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId);
-
-    if (wasGlitchCaught) {
-      this.#updateScore(catcherId , SCORE_RULES.GLITCH_CATCH_REWARD);
-      this.#notify();
-
-      if (this.getCatcherScore(catcherId) >= this.#settings.pointsToWin.getPoints()) {
-        this.#win(catcherId);
-        this.stop();
-
-        this.#notify();
-      }
-    }
-
-    this.#updateGlitchStrike(catcherId , wasGlitchCaught);
+  get wasSkyExit() {
+    const value = this.#wasSkyExit;
+    this.#wasSkyExit = false;
+    return value;
   }
 
   getCatcherScore(catcherId) {
     return this.#score.get(catcherId).points ?? 0;
   }
 
-  getGlitchStrike(catcherId) {
-    return this.#score.get(catcherId)?.glitchStrike ?? 0;
+  get wasCatcherCollision() {
+    const value = this.#wasCatcherCollision;
+    this.#wasCatcherCollision = false;
+    return value;
   }
 
   isGameOverByTime() {
@@ -316,14 +279,76 @@ export class Game {
     }
   }
 
+
+
   #isInsideSky(newPosition) {
     return 0 <= newPosition.x && newPosition.x < this.settings.skySize.columnsCount
       && 0 <= newPosition.y && newPosition.y < this.settings.skySize.rowsCount;
   }
 
+  moveCatcher(catcherId , direction) {
+    const catcher = this.#catchers.get(catcherId);
+    if (!catcher) throw new Error(`Catcher with id ${catcherId} not found`);
+
+    const newPosition = catcher.position.clone();
+
+    switch (direction) {
+      case MOVE_DIRECTIONS.UP:
+        newPosition.y--;
+        break;
+      case MOVE_DIRECTIONS.DOWN:
+        newPosition.y++;
+        break;
+      case MOVE_DIRECTIONS.LEFT:
+        newPosition.x--;
+        break;
+      case MOVE_DIRECTIONS.RIGHT:
+        newPosition.x++;
+        break;
+      default:
+        throw new Error('Invalid direction');
+    }
+
+    if (!this.#isInsideSky(newPosition)) {
+      this.#wasSkyExit = true;
+      this.#updateScore(catcherId , SCORE_RULES.OUT_OF_BOUNDS_PENALTY);
+      return;
+    }
+
+    if (this.#isCellBusyByOtherCatcher(newPosition , catcherId)) {
+      this.#updateScore(catcherId , SCORE_RULES.CELL_CONFLICT_PENALTY);
+      return;
+    }
+
+    catcher.position = newPosition;
+    this.#notify();
+
+
+    const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId)
+    if (wasGlitchCaught) {
+      this.#wasGlitchCaught = true;
+      this.#updateScore(catcherId , SCORE_RULES.GLITCH_CATCH_REWARD);
+      this.#notify();
+
+      if (this.getCatcherScore(catcherId) >= this.#settings.pointsToWin.getPoints()) {
+        this.#win(catcherId);
+        this.stop();
+
+        this.#notify();
+      }
+    }
+
+    this.#updateGlitchStrike(catcherId , wasGlitchCaught);
+  }
+
+  getGlitchStrike(catcherId) {
+    return this.#score.get(catcherId)?.currentStrike ?? 0;
+  }
+
   #isCellBusyByOtherCatcher(newPosition , catcherId) {
     for (const [id , catcher] of this.#catchers.entries()) {
       if (catcherId !== id && catcher.position.equals(newPosition)) {
+        this.#wasCatcherCollision = true;
         return true;
       }
     }

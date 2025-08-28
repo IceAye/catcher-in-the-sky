@@ -2,6 +2,7 @@ import { GAME_STATUSES } from './shared/constants.js';
 import { msToMinutes , msToSeconds } from './shared/utils/time.js';
 import { settingsConfig } from './shared/settingsModule/settingsConfig.js';
 import { SettingsDraftBuilder } from './shared/settingsModule/settingsDraftBuilder.js';
+import { AudioManager } from './services/AudioManager.js';
 
 export class Controller {
 
@@ -25,6 +26,7 @@ export class Controller {
     this.#model.subscribe(() => {
       this.#renderCurrentState();
       this.#handleModelUpdate();
+      this.#handleGameEvents();
     });
     this.#view.onRestart = () => {
       this.#model.restart();
@@ -38,15 +40,43 @@ export class Controller {
 
   #handleCatcherMove(id) {
     return ({ direction }) => {
+      AudioManager.play('catcherMove' , this.#model.settings.soundEnabled);
       this.#model.moveCatcher(id , direction);
     };
   }
 
   #handleModelUpdate() {
     const result = this.#model.getGameResult?.();
+    const soundEnabled = this.#model.settings.soundEnabled;
 
     if (result) {
       this.#view.showModal(result.outcome , result.winnerId , result.stats);
+
+      switch (result.outcome) {
+        case 'win':
+          AudioManager.play('win' , soundEnabled);
+          break;
+        case 'lose':
+          AudioManager.play('lose' , soundEnabled);
+      }
+     }
+  }
+
+  #handleGameEvents() {
+    const wasGlitchCaught = this.#model.wasGlitchCaught;
+
+    const soundEnabled = this.#model.settings.soundEnabled;
+
+    if (this.#model.wasCatcherCollision) {
+      AudioManager.play('catcherClash', soundEnabled);
+    }
+
+    if (this.#model.wasSkyExit) {
+      AudioManager.play('skyBoundaryHit', soundEnabled);
+    }
+
+    if (wasGlitchCaught) {
+      AudioManager.play('catchGlitch', soundEnabled);
     }
   }
 

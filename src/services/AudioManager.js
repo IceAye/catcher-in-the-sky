@@ -1,12 +1,12 @@
 export class AudioManager {
   static sounds = {
     click: new Audio('front/assets/sounds/click.mp3'),
-    // glitchMove: new Audio('assets/sounds/glitchMove.mp3'),
-    // playerMove: new Audio('assets/sounds/playerMove.mp3'),
-    // catchGlitch: new Audio('assets/sounds/catch.mp3'),
-    // collision: new Audio('assets/sounds/collision.mp3'),
-    // win: new Audio('assets/sounds/win.mp3'),
-    // lose: new Audio('assets/sounds/lose.mp3'),
+    catcherMove: new Audio('front/assets/sounds/catcherMove.mp3'),
+    catchGlitch: new Audio('front/assets/sounds/catch.mp3'),
+    catcherClash: new Audio('front/assets/sounds/clash.mp3'),
+    skyBoundaryHit: new Audio('front/assets/sounds/boundary.mp3'),
+    win: new Audio('front/assets/sounds/win.mp3'),
+    lose: new Audio('front/assets/sounds/lose.mp3'),
   };
 
   static play(name, soundEnabled) {

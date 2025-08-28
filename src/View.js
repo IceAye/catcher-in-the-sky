@@ -96,16 +96,17 @@ export class View {
     }
   }
 
-  showModal(outcome , winnerId , stats) {
-    const modal = this.#renderModal(outcome , winnerId , stats);
+  showModal(outcome , winnerId , stats , soundEnabled) {
+    const modal = this.#renderModal(outcome , winnerId , stats , soundEnabled);
 
     this.#root.appendChild(modal);
   }
 
   hideModal() {
     const modal = this.#root.querySelector('.modal');
+    console.log(typeof modal);
     // todo: refactor null
-    this.#root.removeChild(modal);
+    this.#root.remove(modal);
   }
 
   #renderStartScreen(settingsDTO) {
@@ -202,7 +203,7 @@ export class View {
     this.updateSoundButton(soundEnabled);
 
     this.#soundButton.addEventListener('click' , () => {
-      this.#onToggleSoundObserver?.();
+                                         this.#onToggleSoundObserver?.();
                                        }
     );
 
@@ -216,15 +217,34 @@ export class View {
     this.#soundButton.classList.toggle('on' , soundEnabled);
   }
 
-  #renderModal(outcome , winnerId , stats) {
+  #renderModal(outcome , winnerId , stats , soundEnabled) {
     const modal = document.createElement('div');
     modal.className = 'modal';
 
-    const iconSrc =
-      outcome === 'win' ? '/src/front/assets/icons/winnerIcon.svg' : '/src/front/assets/icons/lossIcon.svg';
-    const titleText = outcome === 'win' ? `Catcher ${winnerId} Win!` : 'You Lose!';
-    const subtitleText =
-      outcome === 'win' ? 'Congratulations' : 'You\'ll be lucky next time';
+    const isWin = outcome === 'win';
+
+    const iconSrc = isWin
+                    ? '/src/front/assets/icons/winnerIcon.svg'
+                    : '/src/front/assets/icons/lossIcon.svg';
+
+    const titleText = isWin
+                      ? `Catcher ${winnerId} Win!`
+                      : 'You Lose!';
+
+    const subtitleText = isWin
+                         ? 'Congratulations'
+                         : 'You\'ll be lucky next time';
+
+    const resultHTML = isWin
+                       ? `
+    <div class="modal-result">
+      <div class="result-block">
+        <span class="result-title">Points:</span>
+        <span class="result"> ${stats.points}</span>
+      </div>
+    </div>
+  `
+                       : '';
 
     modal.innerHTML = `
   <div class="modal-decoration">
@@ -233,20 +253,14 @@ export class View {
   <div class="modal-elements">
     <div class="title-modal">${titleText}</div>
     <div class="text-modal">${subtitleText}</div>
-    ${outcome === 'win' ? `
-      <div class="modal-result">
-        <div class="result-block">
-          <span class="result-title">Points:</span>
-          <span class="result"> ${stats.points}</span>
-        </div>
-      </div>
-    ` : ''}
+   ${resultHTML}
     <button class="button">Play again</button>
   </div>
 `;
 
     const buttonEl = modal.querySelector('button');
     buttonEl.addEventListener('click' , () => {
+      AudioManager.play('click' , soundEnabled);
       this.#onRestartObserver?.();
     });
 
