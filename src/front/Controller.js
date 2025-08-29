@@ -1,8 +1,8 @@
-import { GAME_STATUSES } from './shared/constants.js';
-import { msToMinutes , msToSeconds } from './shared/utils/time.js';
-import { settingsConfig } from './shared/settingsModule/settingsConfig.js';
-import { SettingsDraftBuilder } from './shared/settingsModule/settingsDraftBuilder.js';
-import { AudioManager } from './services/AudioManager.js';
+import { GAME_STATUSES } from '../shared/constants.js';
+import { msToMinutes , msToSeconds } from '../shared/utils/time.js';
+import { settingsConfig } from '../shared/settingsModule/settingsConfig.js';
+import { SettingsDraftBuilder } from '../shared/settingsModule/settingsDraftBuilder.js';
+import { AudioManager } from '../services/AudioManager.js';
 
 export class Controller {
 
@@ -58,6 +58,7 @@ export class Controller {
           break;
         case 'lose':
           AudioManager.play('lose' , soundEnabled);
+          break;
       }
      }
   }

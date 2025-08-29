@@ -1,5 +1,5 @@
-import { GAME_STATUSES , MOVE_DIRECTIONS } from './shared/constants.js';
-import { AudioManager } from './services/AudioManager.js';
+import { GAME_STATUSES , MOVE_DIRECTIONS } from '../shared/constants.js';
+import { AudioManager } from '../services/AudioManager.js';
 
 export class View {
   constructor() {
