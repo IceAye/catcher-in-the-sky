@@ -279,8 +279,6 @@ export class Game {
     }
   }
 
-
-
   #isInsideSky(newPosition) {
     return 0 <= newPosition.x && newPosition.x < this.settings.skySize.columnsCount
       && 0 <= newPosition.y && newPosition.y < this.settings.skySize.rowsCount;
