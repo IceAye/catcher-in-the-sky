@@ -23,11 +23,7 @@ export class Game {
     return this.#glitch;
   }
 
-  get glitchPosition() {
-    return this.#glitch
-           ? this.#glitch.position
-           : { x: null, y: null };
-  }
+  #gameResult = null;
 
   set glitchPosition(newPosition) {
     this.#glitch.position = newPosition;
@@ -42,10 +38,7 @@ export class Game {
   get catcherOne() {
     return this.#catcherOne;
   }
-
-  get catcherOnePosition() {
-    return this.#catcherOne ? this.#catcherOne.position : {x: null, y: null};
-  }
+  #score = new Map();
 
   set catcherOnePosition(newPosition) {
     this.#catcherOne.position = newPosition;
@@ -56,12 +49,29 @@ export class Game {
   get catcherTwo() {
     return this.#catcherTwo;
   }
-
-  get catcherTwoPosition() {
-    return this.#catcherTwo ? this.#catcherTwo.position : {x: null, y: null};
-  }
+  #wasGlitchCaught = false;
 
   #settings;
+  #wasSkyExit = false;
+  #wasCatcherCollision = false;
+
+  get glitchPosition() {
+    return this.#glitch
+           ? this.#glitch.position
+           : { x: null , y: null };
+  }
+
+  getGameResult() {
+    return this.#gameResult;
+  }
+
+  get catcherOnePosition() {
+    return this.#catcherOne ? this.#catcherOne.position : { x: null , y: null };
+  }
+
+  get catcherTwoPosition() {
+    return this.#catcherTwo ? this.#catcherTwo.position : { x: null , y: null };
+  }
 
   get settings() {
     return {
@@ -74,27 +84,10 @@ export class Game {
       gameTime: this.#settings.gameTime ,
       soundEnabled: this.#settings.soundEnabled ,
       pointsToWin: {
-        mode: this.#settings.pointsToWin.mode,
-        total: this.#settings.pointsToWin.getPoints(),
+        mode: this.#settings.pointsToWin.mode ,
+        total: this.#settings.pointsToWin.getPoints()
       }
     };
-  }
-
-  #gameResult = null;
-
-  #score = new Map();
-  getScore() {
-    return new Map(this.#score);
-  }
-
-  #wasGlitchCaught = false;
-  #wasSkyExit = false;
-  #wasCatcherCollision = false;
-
-  get wasGlitchCaught() {
-    const caught = this.#wasGlitchCaught;
-    this.#wasGlitchCaught = false;
-    return caught;
   }
 
   set settings(settings) {
@@ -118,7 +111,7 @@ export class Game {
     if (settings.pointsToWin) {
       const mode = settings.pointsToWin.mode ?? 'duel';
       const customPoints = settings.pointsToWin.customPoints ?? null;
-      this.#settings.pointsToWin = new PointsToWin({ mode, customPoints });
+      this.#settings.pointsToWin = new PointsToWin({ mode , customPoints });
     }
 
     if ('soundEnabled' in settings) {
@@ -127,8 +120,27 @@ export class Game {
 
     this.#notify();
   }
-  getGameResult() {
-    return this.#gameResult;
+
+  get wasGlitchCaught() {
+    const caught = this.#wasGlitchCaught;
+    this.#wasGlitchCaught = false;
+    return caught;
+  }
+
+  get wasSkyExit() {
+    const value = this.#wasSkyExit;
+    this.#wasSkyExit = false;
+    return value;
+  }
+
+  get wasCatcherCollision() {
+    const value = this.#wasCatcherCollision;
+    this.#wasCatcherCollision = false;
+    return value;
+  }
+
+  getScore() {
+    return new Map(this.#score);
   }
 
   #startTime = null;
@@ -178,20 +190,8 @@ export class Game {
     this.#notify();
   }
 
-  get wasSkyExit() {
-    const value = this.#wasSkyExit;
-    this.#wasSkyExit = false;
-    return value;
-  }
-
   getCatcherScore(catcherId) {
     return this.#score.get(catcherId).points ?? 0;
-  }
-
-  get wasCatcherCollision() {
-    const value = this.#wasCatcherCollision;
-    this.#wasCatcherCollision = false;
-    return value;
   }
 
   isGameOverByTime() {
@@ -206,11 +206,13 @@ export class Game {
 
   subscribe(newSubscriber) {
     this.#subscribers.push(newSubscriber);
-
+    return () => {
+      this.#subscribers = this.#subscribers.filter(s => s !== newSubscriber);
+    };
   }
 
   unsubscribe(subscriber) {
-      this.#subscribers.filter(s => s !== subscriber);
+    this.#subscribers.filter(s => s !== subscriber);
   }
 
   #notify() {
@@ -219,8 +221,8 @@ export class Game {
 
   #win(catcherId) {
     const result = {
-      outcome: 'win',
-      winnerId: catcherId,
+      outcome: 'win' ,
+      winnerId: catcherId ,
       stats: this.#score.get(catcherId)
     };
     this.#gameResult = result;
@@ -230,8 +232,8 @@ export class Game {
 
   #lose() {
     const result = {
-      outcome: 'lose',
-      winnerId: null,
+      outcome: 'lose' ,
+      winnerId: null ,
       stats: null
     };
     this.#gameResult = result;
@@ -275,7 +277,7 @@ export class Game {
     this.#score = new Map();
 
     for (const [id] of this.#catchers) {
-      this.#score.set(id, { points: 0, currentStrike: 0 });
+      this.#score.set(id , { points: 0 , currentStrike: 0 });
     }
   }
 
@@ -322,7 +324,7 @@ export class Game {
     this.#notify();
 
 
-    const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId)
+    const wasGlitchCaught = this.#isGlitchBeingCaught(catcherId);
     if (wasGlitchCaught) {
       this.#wasGlitchCaught = true;
       this.#updateScore(catcherId , SCORE_RULES.GLITCH_CATCH_REWARD);
@@ -375,8 +377,8 @@ export class Game {
     const updatedScore = {
       points: currentScore.points ,
       currentStrike: wasGlitchCaught
-                    ? currentScore.currentStrike + 1
-                    : currentScore.currentStrike - 1
+                     ? currentScore.currentStrike + 1
+                     : currentScore.currentStrike - 1
     };
 
     this.#applyGlitchStrikeEffects(updatedScore);
