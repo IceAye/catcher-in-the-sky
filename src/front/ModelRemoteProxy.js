@@ -24,7 +24,7 @@ export class ModelRemoteProxy {
 
   constructor() {
     this.#channel = new WebSocket('ws://localhost:8080');
-    console.log(this.#state.settings)
+    console.log(this.#settings)
 
     this.#channel.addEventListener('message' , (event) => {
       const stateFromServer = JSON.parse(event.data);
@@ -51,12 +51,20 @@ export class ModelRemoteProxy {
       };
 
       if ('settings' in stateFromServer) {
-        this.#state = { ...this.#state, settings: stateFromServer.settings };
-        this.#settings = new Settings(stateFromServer.settings);
+        this.#state = { ...this.#state, settings: {
+          ...this.#state.settings,
+          ...stateFromServer.settings
+        } };
+        Object.assign(this.#settings, stateFromServer.settings)
       }
 
       this.#subscribers.forEach(subscriber => subscriber());
     });
+
+    // this.#channel.onmessage = (msg) => {
+    //   console.log('INCOMING:', msg.data);
+    //   // ...
+    // };
   }
 
   get wasGlitchCaught() {
@@ -107,24 +115,36 @@ export class ModelRemoteProxy {
     };
   }
 
+  #notify() {
+    for (const callback of this.#subscribers) {
+      callback(this.#state);
+    }
+  }
+
   start() {
     // alert('Wait for the 2nd catcher')
-    console.log('Game started');
     this.#channel.send(JSON.stringify({ type: 'START' }));
   }
 
   startGameTimer() {
-    console.log('Game timer started');
     this.#channel.send(JSON.stringify({ type: 'START_GAME_TIMER' }));
   }
 
   restart() {
-    console.log('Game restarted');
     this.#channel.send(JSON.stringify({ type: 'RESTART' }));
   }
 
   toggleSoundSetting() {
-    console.log('Sound setting toggled');
+    this.#settings.toggleSound();
+    this.#state = {
+      ...this.#state,
+      settings: {
+        ...this.#state.settings,
+        soundEnabled: this.#settings.soundEnabled,
+      }
+    }
+    this.#channel.send(JSON.stringify({type: 'TOGGLE_SOUND'}));
+    this.#notify();
   }
 
   getGameResult() {

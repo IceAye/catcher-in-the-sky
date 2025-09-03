@@ -101,6 +101,9 @@ wsServer.on('connection' , (channel) => {
         case 'START_GAME_TIMER':
           game.startGameTimer();
           break;
+        case 'TOGGLE_SOUND':
+          game.toggleSoundSetting();
+          break;
         default:
           console.warn('Unknown action type, ' , action.type);
       }
