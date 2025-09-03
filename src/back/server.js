@@ -104,6 +104,9 @@ wsServer.on('connection' , (channel) => {
         case 'TOGGLE_SOUND':
           game.toggleSoundSetting();
           break;
+        case 'APPLY_SETTINGS':
+          game.applySettings(action.payload);
+          break;
         default:
           console.warn('Unknown action type, ' , action.type);
       }

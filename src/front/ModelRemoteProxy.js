@@ -24,7 +24,6 @@ export class ModelRemoteProxy {
 
   constructor() {
     this.#channel = new WebSocket('ws://localhost:8080');
-    console.log(this.#settings)
 
     this.#channel.addEventListener('message' , (event) => {
       const stateFromServer = JSON.parse(event.data);
@@ -61,10 +60,6 @@ export class ModelRemoteProxy {
       this.#subscribers.forEach(subscriber => subscriber());
     });
 
-    // this.#channel.onmessage = (msg) => {
-    //   console.log('INCOMING:', msg.data);
-    //   // ...
-    // };
   }
 
   get wasGlitchCaught() {
@@ -151,7 +146,25 @@ export class ModelRemoteProxy {
     return this.#state.gameResult;
   }
 
-  applySettings(settings) {
+  applySettings(newSettings) {
+    if (!newSettings || typeof newSettings !== 'object') {
+      console.warn('Invalid settings object');
+      return;
+    }
+
+    Object.assign(this.#settings, newSettings);
+
+    this.#state = {
+      ...this.#state,
+      settings: {
+        ...this.#state.settings,
+        ...newSettings
+      }
+    }
+
+    this.#channel.send(JSON.stringify({type: 'APPLY_SETTINGS', payload: newSettings}));
+
+    this.#notify();
   }
 
   getScore() {
