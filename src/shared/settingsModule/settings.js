@@ -8,7 +8,7 @@ export class Settings {
   constructor({ skySize = {} , level , gameTime = DEFAULT_GAME_TIME_IN_MIN , points = {} } = {}) {
     this.skySize = new SkySize(skySize);
     this.glitchSpeedJump = new GlitchSpeedJump(level);
-    this.gameTime = gameTime;
+    this.gameTime = minutesToMs(gameTime);
     this.pointsToWin = new PointsToWin(points);
   }
 

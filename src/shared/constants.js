@@ -1,5 +1,3 @@
-import { msToMinutes } from './utils/time.js';
-
 export const GAME_STATUSES = {
   PENDING: 'pending',
   IN_PROGRESS: 'in_progress',
@@ -25,4 +23,4 @@ export const SCORE_RULES = {
   GLITCH_MISS_THRESHOLD: -5,
 };
 
-export const DEFAULT_GAME_TIME_IN_MIN = msToMinutes(1000 * 60 * 2);
+export const DEFAULT_GAME_TIME_IN_MIN = 2;
