@@ -1,6 +1,8 @@
 import { GAME_STATUSES } from '../shared/constants.js';
 import { Position } from '../config/position.js';
 import { Settings } from '../shared/settingsModule/settings.js';
+import { buildDefaultSettings } from '../shared/utils/build-default-settings.js';
+import { settingsConfig } from '../shared/settingsModule/settingsConfig.js';
 
 export class ModelRemoteProxy {
   #channel;
@@ -15,13 +17,14 @@ export class ModelRemoteProxy {
     gameResult: null ,
     score: [] ,
     remainingGameTimeMs: null,
-    settings: null
+    settings: buildDefaultSettings(settingsConfig)
   };
-  #settings = null;
+  #settings = new Settings(this.#state.settings);
   #subscribers = [];
 
   constructor() {
     this.#channel = new WebSocket('ws://localhost:8080');
+    console.log(this.#state.settings)
 
     this.#channel.addEventListener('message' , (event) => {
       const stateFromServer = JSON.parse(event.data);
@@ -49,7 +52,7 @@ export class ModelRemoteProxy {
 
       if ('settings' in stateFromServer) {
         this.#state = { ...this.#state, settings: stateFromServer.settings };
-        this.#settings = this.#hydrateSettings(stateFromServer.settings);
+        this.#settings = new Settings(stateFromServer.settings);
       }
 
       this.#subscribers.forEach(subscriber => subscriber());
@@ -90,10 +93,6 @@ export class ModelRemoteProxy {
 
   get remainingTimeMs() {
     return this.#state.remainingGameTimeMs;
-  }
-
-  #hydrateSettings(fromJSON) {
-    return fromJSON ? new Settings(fromJSON) : null;
   }
 
   // reconstruct original model's methods
