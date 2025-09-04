@@ -232,3 +232,42 @@ input {
     gap: 24px;
 }
 
+/* ControlsBlock //======================================================================================================================================================== */
+
+.controls {
+    display: flex;
+   width: 650px;
+    height: 50px;
+    justify-content:space-evenly;
+    margin: 24px auto 0;
+    align-items: center;
+    background-color: rgba(110, 117, 102, 0.6);
+    border: 2px solid rgba(153, 155, 149, 1);
+    border-radius: 5px;
+}
+
+.controls > span:before {
+    content: '';
+    position: absolute;
+    height: 24px;
+    width: 24px;
+    top: 12px;
+    left: -22px;
+    background-image: url('/src/front/assets/icons/info.svg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    z-index: 1;
+}
+
+.controls > span {
+    font-size: 18px;
+    position: relative;
+    padding: 12px;
+}
+
+.controls > button {
+    font-size: 22px;
+    font-weight: 500;
+    color: #75FA4C;
+}

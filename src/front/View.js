@@ -44,6 +44,8 @@ export class View {
 
   #soundButton = null;
 
+  #showControlsBlock = true;
+
   #onStartObserver;
   #onCatcherOneMoveObserver;
   #onCatcherTwoMoveObserver;
@@ -273,10 +275,35 @@ export class View {
 
     gameScreen.classList.add('main-elements');
 
+    gameScreen.appendChild(this.#renderCatcherControlsInfo());
     gameScreen.appendChild(this.#renderScoreBoard(gameDTO , settingsDTO));
     gameScreen.appendChild(this.#renderSkyGrid(gameDTO , settingsDTO));
 
     this.#root.appendChild(gameScreen);
+  }
+
+  #renderCatcherControlsInfo() {
+    const controlsBlock = document.createElement('div');
+    controlsBlock.classList.add('controls');
+
+    const spanInfo = document.createElement('span');
+    spanInfo.textContent = 'Control scheme: catcher 1 - “arrows", and catcher 2 - “WASD”';
+
+    const buttonInfo = document.createElement('button');
+    buttonInfo.textContent = 'OK';
+
+    buttonInfo.addEventListener('click' , () => {
+      this.#showControlsBlock = false;
+    });
+
+    controlsBlock.appendChild(spanInfo);
+    controlsBlock.appendChild(buttonInfo);
+
+    if (!this.#showControlsBlock) {
+      controlsBlock.style.display = 'none';
+    }
+
+    return controlsBlock;
   }
 
   #renderSettingsBoard(settingsDTO) {
