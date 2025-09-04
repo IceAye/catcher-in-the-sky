@@ -16,11 +16,13 @@ export class ModelRemoteProxy {
     wasSkyExit: null ,
     gameResult: null ,
     score: [] ,
-    remainingGameTimeMs: null,
+    remainingGameTimeMs: null ,
     settings: buildDefaultSettings(settingsConfig)
   };
   #settings = new Settings(this.#state.settings);
   #subscribers = [];
+  #secondPlayerReady = false;
+  #role = null;
 
   constructor() {
     this.#channel = new WebSocket('ws://localhost:8080');
@@ -28,33 +30,39 @@ export class ModelRemoteProxy {
     this.#channel.addEventListener('message' , (event) => {
       const stateFromServer = JSON.parse(event.data);
 
-      this.#state = {
-        ...this.#state ,
-        status: stateFromServer.status ,
-        glitchPosition: stateFromServer.glitchPosition ? new Position(stateFromServer.glitchPosition.x ,
-                                                                      stateFromServer.glitchPosition.y) : null ,
-        catcherOnePosition: stateFromServer.catcherOnePosition
-                            ? new Position(stateFromServer.catcherOnePosition.x ,
-                                           stateFromServer.catcherOnePosition.y)
-                            : null ,
-        catcherTwoPosition: stateFromServer.catcherTwoPosition
-                            ? new Position(stateFromServer.catcherTwoPosition.x ,
-                                           stateFromServer.catcherTwoPosition.y)
-                            : null ,
-        wasGlitchCaught: stateFromServer.wasGlitchCaught ,
-        wasCatcherCollision: stateFromServer.wasCatcherCollision ,
-        wasSkyExit: stateFromServer.wasSkyExit ,
-        gameResult: stateFromServer.gameResult ? { ...stateFromServer.gameResult } : null ,
-        score: stateFromServer.score ,
-        remainingGameTimeMs: stateFromServer.remainingGameTimeMs ,
-      };
+      if (stateFromServer.type) {
+        this.#handleServerEvent(stateFromServer);
+      } else {
+        this.#state = {
+          ...this.#state ,
+          status: stateFromServer.status ,
+          glitchPosition: stateFromServer.glitchPosition ? new Position(stateFromServer.glitchPosition.x ,
+                                                                        stateFromServer.glitchPosition.y) : null ,
+          catcherOnePosition: stateFromServer.catcherOnePosition
+                              ? new Position(stateFromServer.catcherOnePosition.x ,
+                                             stateFromServer.catcherOnePosition.y)
+                              : null ,
+          catcherTwoPosition: stateFromServer.catcherTwoPosition
+                              ? new Position(stateFromServer.catcherTwoPosition.x ,
+                                             stateFromServer.catcherTwoPosition.y)
+                              : null ,
+          wasGlitchCaught: stateFromServer.wasGlitchCaught ,
+          wasCatcherCollision: stateFromServer.wasCatcherCollision ,
+          wasSkyExit: stateFromServer.wasSkyExit ,
+          gameResult: stateFromServer.gameResult ? { ...stateFromServer.gameResult } : null ,
+          score: stateFromServer.score ,
+          remainingGameTimeMs: stateFromServer.remainingGameTimeMs
+        };
 
-      if ('settings' in stateFromServer) {
-        this.#state = { ...this.#state, settings: {
-          ...this.#state.settings,
-          ...stateFromServer.settings
-        } };
-        Object.assign(this.#settings, stateFromServer.settings)
+        if ('settings' in stateFromServer) {
+          this.#state = {
+            ...this.#state , settings: {
+              ...this.#state.settings ,
+              ...stateFromServer.settings
+            }
+          };
+          Object.assign(this.#settings , stateFromServer.settings);
+        }
       }
 
       this.#subscribers.forEach(subscriber => subscriber());
@@ -100,7 +108,15 @@ export class ModelRemoteProxy {
 
   // reconstruct original model's methods
   moveCatcher(catcherId , direction) {
-    this.#channel.send(JSON.stringify({ type: 'MOVE_CATCHER' , payload: { catcherId , direction } }));
+    if (
+      (this.#role === 'catcherOne' && catcherId === 1) ||
+      (this.#role === 'catcherTwo' && catcherId === 2)
+    ) {
+      this.#channel.send(JSON.stringify({
+                                          type: 'MOVE_CATCHER' ,
+                                          payload: { catcherId , direction }
+                                        }));
+    }
   }
 
   subscribe(callback) {
@@ -116,8 +132,25 @@ export class ModelRemoteProxy {
     }
   }
 
+  #handleServerEvent(event) {
+    switch (event.type) {
+      case 'SECOND_CATCHER_CONNECTED':
+        this.#secondPlayerReady = true;
+        alert('The 2nd catcher is connected');
+        break;
+
+      case 'ROLE_ASSIGNED':
+        this.#role = event.role;
+        alert( this.#role === 'catcherOne' ? 'You are catcher #1' : 'You are catcher #2');
+        break;
+
+      default:
+        console.warn('Unknown server event type:' , event.type);
+    }
+  }
+
+
   start() {
-    // alert('Wait for the 2nd catcher')
     this.#channel.send(JSON.stringify({ type: 'START' }));
   }
 
@@ -132,13 +165,13 @@ export class ModelRemoteProxy {
   toggleSoundSetting() {
     this.#settings.toggleSound();
     this.#state = {
-      ...this.#state,
+      ...this.#state ,
       settings: {
-        ...this.#state.settings,
-        soundEnabled: this.#settings.soundEnabled,
+        ...this.#state.settings ,
+        soundEnabled: this.#settings.soundEnabled
       }
-    }
-    this.#channel.send(JSON.stringify({type: 'TOGGLE_SOUND'}));
+    };
+    this.#channel.send(JSON.stringify({ type: 'TOGGLE_SOUND' }));
     this.#notify();
   }
 
@@ -152,17 +185,17 @@ export class ModelRemoteProxy {
       return;
     }
 
-    Object.assign(this.#settings, newSettings);
+    Object.assign(this.#settings , newSettings);
 
     this.#state = {
-      ...this.#state,
+      ...this.#state ,
       settings: {
-        ...this.#state.settings,
+        ...this.#state.settings ,
         ...newSettings
       }
-    }
+    };
 
-    this.#channel.send(JSON.stringify({type: 'APPLY_SETTINGS', payload: newSettings}));
+    this.#channel.send(JSON.stringify({ type: 'APPLY_SETTINGS' , payload: newSettings }));
 
     this.#notify();
   }
