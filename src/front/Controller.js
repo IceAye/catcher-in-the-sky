@@ -16,6 +16,7 @@ export class Controller {
 
   init() {
     this.#renderCurrentState();
+    this.#initModelEventHandlers();
     this.#view.onstart = (settingsToModel) => {
       this.#applySettings(settingsToModel);
       this.#start();
@@ -36,6 +37,20 @@ export class Controller {
       this.#model.toggleSoundSetting();
       this.#view.updateSoundButton(this.#model.settings.soundEnabled);
     };
+  }
+
+  #initModelEventHandlers() {
+    if (typeof this.#model.on === 'function') {
+      this.#model.on('roleAssigned', (data) => {
+        this.#view.showNotification(`You are ${data.role}`);
+        AudioManager.play('notification', true);
+      });
+
+      this.#model.on('secondPlayerConnected', () => {
+        this.#view.showNotification('Second player connected!');
+        AudioManager.play('notification', true);
+      });
+    }
   }
 
   #handleCatcherMove(id) {

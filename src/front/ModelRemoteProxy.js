@@ -23,6 +23,14 @@ export class ModelRemoteProxy {
   #subscribers = [];
   #secondPlayerReady = false;
   #role = null;
+  #eventHandlers = {};
+
+  on(event, callback) {
+    if(!this.#eventHandlers[event]) {
+      this.#eventHandlers[event] = [];
+    }
+    this.#eventHandlers[event].push(callback);
+  }
 
   constructor() {
     this.#channel = new WebSocket('ws://localhost:8080');
@@ -132,16 +140,20 @@ export class ModelRemoteProxy {
     }
   }
 
+  #emit(event, data) {
+    this.#eventHandlers[event]?.forEach(cb => cb(data));
+  }
+
   #handleServerEvent(event) {
     switch (event.type) {
       case 'SECOND_CATCHER_CONNECTED':
         this.#secondPlayerReady = true;
-        alert('The 2nd catcher is connected');
+        this.#emit('secondPlayerConnected');
         break;
 
       case 'ROLE_ASSIGNED':
         this.#role = event.role;
-        alert( this.#role === 'catcherOne' ? 'You are catcher #1' : 'You are catcher #2');
+        this.#emit('roleAssigned', { role: this.#role });
         break;
 
       default:

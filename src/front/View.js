@@ -112,6 +112,10 @@ export class View {
     }
   }
 
+  showNotification(message) {
+    alert(message);
+  }
+
   #renderStartScreen(settingsDTO) {
     const { soundEnabled } = settingsDTO;
 
