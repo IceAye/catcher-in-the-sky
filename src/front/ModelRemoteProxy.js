@@ -1,8 +1,9 @@
-import { GAME_STATUSES } from '../shared/constants.js';
+import { GAME_STATUSES } from '../shared/constants/gameSetup.js';
 import { Position } from '../config/position.js';
 import { Settings } from '../shared/settingsModule/settings.js';
 import { buildDefaultSettings } from '../shared/utils/build-default-settings.js';
 import { settingsConfig } from '../shared/settingsModule/settingsConfig.js';
+import { ACTIONS , EVENTS } from '../shared/constants/serverEvents.js';
 
 export class ModelRemoteProxy {
   #channel;
@@ -121,7 +122,7 @@ export class ModelRemoteProxy {
       (this.#role === 'catcherTwo' && catcherId === 2)
     ) {
       this.#channel.send(JSON.stringify({
-                                          type: 'MOVE_CATCHER' ,
+                                          type: ACTIONS.MOVE_CATCHER ,
                                           payload: { catcherId , direction }
                                         }));
     }
@@ -146,14 +147,14 @@ export class ModelRemoteProxy {
 
   #handleServerEvent(event) {
     switch (event.type) {
-      case 'SECOND_CATCHER_CONNECTED':
+      case EVENTS.SECOND_CATCHER_CONNECTED:
         this.#secondPlayerReady = true;
-        this.#emit('secondPlayerConnected');
+        this.#emit(EVENTS.SECOND_CATCHER_CONNECTED);
         break;
 
-      case 'ROLE_ASSIGNED':
+      case EVENTS.ROLE_ASSIGNED:
         this.#role = event.role;
-        this.#emit('roleAssigned', { role: this.#role });
+        this.#emit(EVENTS.ROLE_ASSIGNED, { role: this.#role });
         break;
 
       default:
@@ -163,15 +164,15 @@ export class ModelRemoteProxy {
 
 
   start() {
-    this.#channel.send(JSON.stringify({ type: 'START' }));
+    this.#channel.send(JSON.stringify({ type: ACTIONS.START }));
   }
 
   startGameTimer() {
-    this.#channel.send(JSON.stringify({ type: 'START_GAME_TIMER' }));
+    this.#channel.send(JSON.stringify({ type: ACTIONS.START_GAME_TIMER}));
   }
 
   restart() {
-    this.#channel.send(JSON.stringify({ type: 'RESTART' }));
+    this.#channel.send(JSON.stringify({ type: ACTIONS.RESTART }));
   }
 
   toggleSoundSetting() {
@@ -183,7 +184,7 @@ export class ModelRemoteProxy {
         soundEnabled: this.#settings.soundEnabled
       }
     };
-    this.#channel.send(JSON.stringify({ type: 'TOGGLE_SOUND' }));
+    this.#channel.send(JSON.stringify({ type: ACTIONS.TOGGLE_SOUND }));
     this.#notify();
   }
 
@@ -207,7 +208,7 @@ export class ModelRemoteProxy {
       }
     };
 
-    this.#channel.send(JSON.stringify({ type: 'APPLY_SETTINGS' , payload: newSettings }));
+    this.#channel.send(JSON.stringify({ type: ACTIONS.APPLY_SETTINGS , payload: newSettings }));
 
     this.#notify();
   }

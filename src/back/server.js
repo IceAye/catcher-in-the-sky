@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { NumberUtility } from '../shared/utils/number-utility.js';
 import { Game } from './models/game.js';
+import { ACTIONS , EVENTS } from '../shared/constants/serverEvents.js';
 
 /** @type {import('ws').WebSocketServer} */
 const wsServer = new WebSocketServer({ port: 8080 });
@@ -26,8 +27,8 @@ wsServer.on('connection' , (channel) => {
 
   if (currentPair) {
     currentPair.channel2 = channel;
-    currentPair.channel1.send(JSON.stringify({ type: 'SECOND_CATCHER_CONNECTED' }));
-    channel.send(JSON.stringify({ type: 'ROLE_ASSIGNED', role: 'catcherTwo' }));
+    currentPair.channel1.send(JSON.stringify({ type: EVENTS.SECOND_CATCHER_CONNECTED }));
+    channel.send(JSON.stringify({ type: EVENTS.ROLE_ASSIGNED, role: 'catcherTwo' }));
 
   } else {
     const numberUtility = new NumberUtility();
@@ -38,7 +39,7 @@ wsServer.on('connection' , (channel) => {
       channel2: null,
       game: game
     }
-    channel.send(JSON.stringify({ type: 'ROLE_ASSIGNED', role: 'catcherOne' }));
+    channel.send(JSON.stringify({ type: EVENTS.ROLE_ASSIGNED, role: 'catcherOne' }));
 
     pairs.push(currentPair);
   }
@@ -71,22 +72,22 @@ wsServer.on('connection' , (channel) => {
       console.log('Received action: ' , action);
 
       switch (action.type) {
-        case 'START':
+        case ACTIONS.START:
           currentPair.game.start();
           break;
-        case 'MOVE_CATCHER':
+        case ACTIONS.MOVE_CATCHER:
           currentPair.game.moveCatcher(action.payload.catcherId , action.payload.direction);
           break;
-        case 'RESTART':
+        case ACTIONS.RESTART:
           currentPair.game.restart();
           break;
-        case 'START_GAME_TIMER':
+        case ACTIONS.START_GAME_TIMER:
           currentPair.game.startGameTimer();
           break;
-        case 'TOGGLE_SOUND':
+        case ACTIONS.TOGGLE_SOUND:
           currentPair.game.toggleSoundSetting();
           break;
-        case 'APPLY_SETTINGS':
+        case ACTIONS.APPLY_SETTINGS:
           currentPair.game.applySettings(action.payload);
           break;
         default:

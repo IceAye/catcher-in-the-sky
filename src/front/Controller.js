@@ -1,8 +1,9 @@
-import { GAME_STATUSES } from '../shared/constants.js';
+import { GAME_STATUSES } from '../shared/constants/gameSetup.js';
 import { msToMinutes , msToSeconds } from '../shared/utils/time.js';
 import { settingsConfig } from '../shared/settingsModule/settingsConfig.js';
 import { SettingsDraftBuilder } from '../shared/settingsModule/settingsDraftBuilder.js';
 import { AudioManager } from '../services/AudioManager.js';
+import { EVENTS } from '../shared/constants/serverEvents.js';
 
 export class Controller {
 
@@ -41,12 +42,12 @@ export class Controller {
 
   #initModelEventHandlers() {
     if (typeof this.#model.on === 'function') {
-      this.#model.on('roleAssigned', (data) => {
+      this.#model.on(EVENTS.ROLE_ASSIGNED, (data) => {
         this.#view.showNotification(`You are ${data.role}`);
         AudioManager.play('notification', true);
       });
 
-      this.#model.on('secondPlayerConnected', () => {
+      this.#model.on(EVENTS.SECOND_CATCHER_CONNECTED, () => {
         this.#view.showNotification('Second player connected!');
         AudioManager.play('notification', true);
       });

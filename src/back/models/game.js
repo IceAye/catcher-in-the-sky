@@ -1,4 +1,4 @@
-import { GAME_STATUSES , MOVE_DIRECTIONS , SCORE_RULES } from '../../shared/constants.js';
+import { GAME_STATUSES , MOVE_DIRECTIONS , SCORE_RULES } from '../../shared/constants/gameSetup.js';
 import { Settings } from '../../shared/settingsModule/settings.js';
 import { Catcher } from './catcher.js';
 import { Glitch } from './glitch.js';

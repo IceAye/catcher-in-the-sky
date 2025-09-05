@@ -1,4 +1,4 @@
-import { GAME_STATUSES , MOVE_DIRECTIONS } from '../shared/constants.js';
+import { GAME_STATUSES , MOVE_DIRECTIONS } from '../shared/constants/gameSetup.js';
 import { AudioManager } from '../services/AudioManager.js';
 
 export class View {

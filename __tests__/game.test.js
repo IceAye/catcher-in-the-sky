@@ -1,6 +1,6 @@
 import { NumberUtility } from '../src/shared/utils/number-utility.js';
 import { Game } from '../src/back/models/game.js';
-import { GAME_STATUSES , MOVE_DIRECTIONS } from '../src/shared/constants.js';
+import { GAME_STATUSES , MOVE_DIRECTIONS } from '../src/shared/constants/gameSetup.js';
 import { Settings } from '../src/shared/settingsModule/settings.js';
 import { SkySize } from '../src/config/sky-size.js';
 import { Position } from '../src/config/position.js';

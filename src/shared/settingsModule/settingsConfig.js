@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_TIME_IN_MIN } from '../constants.js';
+import { DEFAULT_GAME_TIME_IN_MIN } from '../constants/gameSetup.js';
 
 export const settingsConfig = {
   skySize: {

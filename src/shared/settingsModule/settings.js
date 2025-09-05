@@ -1,7 +1,7 @@
 import { SkySize } from '../../config/sky-size.js';
 import { GlitchSpeedJump } from '../../config/glitch-speed-jump.js';
 import { PointsToWin } from '../../config/points-to-win.js';
-import { DEFAULT_GAME_TIME_IN_MIN } from '../constants.js';
+import { DEFAULT_GAME_TIME_IN_MIN } from '../constants/gameSetup.js';
 import { minutesToMs } from '../utils/time.js';
 
 export class Settings {
