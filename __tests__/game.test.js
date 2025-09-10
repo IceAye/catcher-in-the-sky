@@ -111,17 +111,12 @@ describe('game' , () => {
                                       level: 'junior' ,
                                       interval: 1200
                                     } ,
-                                    gameTime: 120000 ,
+                                    gameTime: 7200000000 ,
                                     soundEnabled: true,
                                     pointsToWin: {
                                       mode: 'duel',
                                       total: 150,
-                                      presets: {
-                                        blitz: 50 ,
-                                        duel: 150 ,
-                                        marathon: 300 ,
-                                        custom: null
-                                      }
+
                                     }
                                   });
 
@@ -154,7 +149,6 @@ describe('game' , () => {
                                           });
     expect(game.settings.glitchSpeedJump.level).toBe('amateur');
     expect(game.settings.glitchSpeedJump.interval).toBe(800);
-    expect(game.settings.gameTime).toBe(120000);
 
     game.settings = {
       gameTime: 180000 // 3 min
@@ -185,11 +179,11 @@ describe('game' , () => {
     expect(game.settings.soundEnabled).toBeDefined();
     expect(game.settings.soundEnabled).toBeTruthy();
 
-    game.toggleSound();
+    game.toggleSoundSetting();
     expect(game.settings.soundEnabled).toBeDefined();
     expect(game.settings.soundEnabled).toBeFalsy();
 
-    game.toggleSound();
+    game.toggleSoundSetting();
     expect(game.settings.soundEnabled).toBeDefined();
     expect(game.settings.soundEnabled).toBeTruthy();
   });

@@ -2,9 +2,22 @@ import { WebSocketServer } from 'ws';
 import { NumberUtility } from '../shared/utils/number-utility.js';
 import { Game } from './models/game.js';
 import { ACTIONS , EVENTS } from '../shared/constants/serverEvents.js';
+import express from 'express';
+import http from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+app.use(express.static(path.join(__dirname, '../../public')));
+app.use('/src', express.static(path.join(__dirname, '../../src')));
+
+const server = http.createServer(app);
 
 /** @type {import('ws').WebSocketServer} */
-const wsServer = new WebSocketServer({ port: 8080 });
+const wsServer = new WebSocketServer({ server });
 
 // {channel1, channel2, game}
 const pairs = [
@@ -18,7 +31,7 @@ process.on('uncaughtException' , (err) => {
 });
 
 wsServer.on('connection' , (channel) => {
-  console.log('WebSocket server listening on port 8080');
+  console.log(`WebSocket server listening on port ${PORT}`);
 
   channel.on('error' , console.error);
 
@@ -107,3 +120,6 @@ wsServer.on('connection' , (channel) => {
   });
 
 });
+
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => console.log((`Server is on port ${PORT}`)));

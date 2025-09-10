@@ -34,7 +34,9 @@ export class ModelRemoteProxy {
   }
 
   constructor() {
-    this.#channel = new WebSocket('ws://localhost:8080');
+    const protocol = window.location.protocol === 'https' ? 'wss' : 'ws';
+    const host = window.location.host;
+    this.#channel = new WebSocket(`${protocol}://${host}`);
 
     this.#channel.addEventListener('message' , (event) => {
       const stateFromServer = JSON.parse(event.data);

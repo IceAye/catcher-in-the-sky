@@ -231,8 +231,8 @@ export class View {
     const isWin = outcome === 'win';
 
     const iconSrc = isWin
-                    ? '/src/front/assets/icons/winnerIcon.svg'
-                    : '/src/front/assets/icons/lossIcon.svg';
+                    ? '/assets/icons/winnerIcon.svg'
+                    : '/assets/icons/lossIcon.svg';
 
     const titleText = isWin
                       ? `Catcher ${winnerId} Win!`
