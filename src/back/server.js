@@ -1,11 +1,8 @@
-import { WebSocketServer } from 'ws';
-import { NumberUtility } from '../shared/utils/number-utility.js';
-import { Game } from './models/game.js';
-import { ACTIONS , EVENTS } from '../shared/constants/serverEvents.js';
-import express from 'express';
-import http from 'http';
+import https from 'https';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import express from 'express';
+import { WebSocketServer } from 'ws';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,7 +11,7 @@ const app = express();
 app.use(express.static(path.join(__dirname, '../../public')));
 app.use('/src', express.static(path.join(__dirname, '../../src')));
 
-const server = http.createServer(app);
+const server = https.createServer(app);
 
 /** @type {import('ws').WebSocketServer} */
 const wsServer = new WebSocketServer({ server });
