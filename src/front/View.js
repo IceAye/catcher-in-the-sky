@@ -76,8 +76,6 @@ export class View {
     this.#root.innerHTML = '';
     this.#root.classList.add('container');
 
-    this.#root.append(gameDTO.status);
-
     if (settingsDTO.isSettingsActive && !this.#settingsDraft) {
       this.#settingsDraft = structuredClone(settingsDTO);
     }
