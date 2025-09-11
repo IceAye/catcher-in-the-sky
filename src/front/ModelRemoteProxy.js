@@ -34,7 +34,7 @@ export class ModelRemoteProxy {
   }
 
   constructor() {
-    const protocol = window.location.protocol === 'https' ? 'wss' : 'ws';
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const host = window.location.host;
     this.#channel = new WebSocket(`${protocol}://${host}`);
 

@@ -1,11 +1,11 @@
-import https from 'https';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import express from 'express';
 import { WebSocketServer } from 'ws';
 import { NumberUtility } from '../shared/utils/number-utility.js';
 import { Game } from './models/game.js';
 import { ACTIONS , EVENTS } from '../shared/constants/serverEvents.js';
+import http from 'http';
+import { fileURLToPath } from 'url';
+import express from 'express';
+import path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,11 +14,7 @@ const app = express();
 app.use(express.static(path.join(__dirname , '../../public')));
 app.use('/src' , express.static(path.join(__dirname , '../../src')));
 
-app.get('/' , (req , res) => {
-  res.send('Secure server is running');
-});
-
-const server = https.createServer(app);
+const server = http.createServer(app);
 
 /** @type {import('ws').WebSocketServer} */
 const wsServer = new WebSocketServer({ server });
@@ -127,5 +123,4 @@ wsServer.on('connection' , (channel) => {
 });
 
 const PORT = process.env.PORT || 8080;
-const HOST = process.env.HOST || '0.0.0.0';
-server.listen(PORT , HOST , () => console.log((`Server running on port ${PORT}`)));
+server.listen(PORT , () => console.log((`Server running on port ${PORT}`)));
