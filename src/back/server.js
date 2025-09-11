@@ -3,13 +3,20 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import { WebSocketServer } from 'ws';
+import { NumberUtility } from '../shared/utils/number-utility.js';
+import { Game } from './models/game.js';
+import { ACTIONS , EVENTS } from '../shared/constants/serverEvents.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.static(path.join(__dirname, '../../public')));
-app.use('/src', express.static(path.join(__dirname, '../../src')));
+app.use(express.static(path.join(__dirname , '../../public')));
+app.use('/src' , express.static(path.join(__dirname , '../../src')));
+
+app.get('/' , (req , res) => {
+  res.send('Secure server is running');
+});
 
 const server = https.createServer(app);
 
@@ -17,8 +24,7 @@ const server = https.createServer(app);
 const wsServer = new WebSocketServer({ server });
 
 // {channel1, channel2, game}
-const pairs = [
-]
+const pairs = [];
 
 
 console.log('WebSocket server initializing...');
@@ -38,18 +44,18 @@ wsServer.on('connection' , (channel) => {
   if (currentPair) {
     currentPair.channel2 = channel;
     currentPair.channel1.send(JSON.stringify({ type: EVENTS.SECOND_CATCHER_CONNECTED }));
-    channel.send(JSON.stringify({ type: EVENTS.ROLE_ASSIGNED, role: 'catcherTwo' }));
+    channel.send(JSON.stringify({ type: EVENTS.ROLE_ASSIGNED , role: 'catcherTwo' }));
 
   } else {
     const numberUtility = new NumberUtility();
     const game = new Game(numberUtility);
 
     currentPair = {
-      channel1: channel,
-      channel2: null,
+      channel1: channel ,
+      channel2: null ,
       game: game
-    }
-    channel.send(JSON.stringify({ type: EVENTS.ROLE_ASSIGNED, role: 'catcherOne' }));
+    };
+    channel.send(JSON.stringify({ type: EVENTS.ROLE_ASSIGNED , role: 'catcherOne' }));
 
     pairs.push(currentPair);
   }
@@ -63,7 +69,9 @@ wsServer.on('connection' , (channel) => {
                                   wasGlitchCaught: currentPair.game.wasGlitchCaught ,
                                   wasCatcherCollision: currentPair.game.wasCatcherCollision ,
                                   wasSkyExit: currentPair.game.wasSkyExit ,
-                                  gameResult: currentPair.game.getGameResult() ? { ...currentPair.game.getGameResult() } : null ,
+                                  gameResult: currentPair.game.getGameResult()
+                                              ? { ...currentPair.game.getGameResult() }
+                                              : null ,
                                   score: Array.from(currentPair.game.getScore()) ,
                                   remainingGameTimeMs: currentPair.game.remainingTimeMs ,
                                   settings: currentPair.game.settings
@@ -108,7 +116,7 @@ wsServer.on('connection' , (channel) => {
     }
   });
 
-  channel.on('close', () => {
+  channel.on('close' , () => {
     const pair = pairs.find(p => p.channel1 === channel || p.channel2 === channel);
     if (pair) {
       if (pair.channel1 === channel) pair.channel1 = null;
@@ -120,4 +128,4 @@ wsServer.on('connection' , (channel) => {
 
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || '0.0.0.0';
-server.listen(PORT, HOST,() => console.log((`Server running on port ${PORT}`)));
+server.listen(PORT , HOST , () => console.log((`Server running on port ${PORT}`)));
